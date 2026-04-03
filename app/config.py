@@ -31,6 +31,9 @@ class Settings(BaseSettings):
         "QQQ": "QQQ",
         "DXY": "DX-Y.NYB",
         "US10Y": "^TNX",
+        "DOW": "^DJI",
+        "GOLD": "GC=F",
+        "VIX": "^VIX",
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

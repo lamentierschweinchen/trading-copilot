@@ -47,6 +47,12 @@ class MacroSnapshot(BaseModel):
     dxy_change_pct: float | None = None
     us10y_yield: float | None = None
     us10y_change_pct: float | None = None
+    dow_price: float | None = None
+    dow_change_pct: float | None = None
+    gold_price: float | None = None
+    gold_change_pct: float | None = None
+    vix_price: float | None = None
+    vix_change_pct: float | None = None
     fear_greed_index: int | None = None
     fear_greed_label: str | None = None
     fetched_at: datetime = Field(default_factory=datetime.now)

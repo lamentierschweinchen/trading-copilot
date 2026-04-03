@@ -23,17 +23,19 @@
   --text-3: #45455a;
   --accent: #e8a819;
   --accent-dim: #e8a81930;
-  --long: #00d4aa;
-  --long-dim: #00d4aa18;
-  --short: #ff6b6b;
-  --short-dim: #ff6b6b18;
+  --green: #00d4aa;
+  --green-dim: #00d4aa18;
+  --green-soft: #00d4aa40;
+  --red: #ff6b6b;
+  --red-dim: #ff6b6b18;
+  --red-soft: #ff6b6b40;
+  --yellow: #e8a819;
+  --yellow-dim: #e8a81918;
+  --yellow-soft: #e8a81940;
   --invalidation: #ff2d55;
   --invalidation-glow: #ff2d5540;
-  --neutral: #5b7bb4;
-  --neutral-dim: #5b7bb418;
-  --risk-on: #00d4aa;
-  --risk-off: #ff6b6b;
-  --risk-neutral: #e8a819;
+  --neutral-blue: #5b7bb4;
+  --neutral-blue-dim: #5b7bb418;
   --font-data: 'IBM Plex Mono', monospace;
   --font-ui: 'Outfit', sans-serif;
   --radius: 6px;
@@ -58,7 +60,7 @@ body {
 /* ─── Layout Shell ─── */
 .shell {
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto auto 1fr;
   min-height: 100vh;
 }
 
@@ -88,7 +90,7 @@ body {
 .status-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
-  background: var(--long);
+  background: var(--green);
   animation: pulse-dot 2s ease-in-out infinite;
 }
 .status-dot.offline { background: var(--text-3); animation: none; }
@@ -174,9 +176,9 @@ body {
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-.macro-regime.risk_on { background: var(--long-dim); color: var(--long); border: 1px solid var(--long)30; }
-.macro-regime.risk_off { background: var(--short-dim); color: var(--short); border: 1px solid var(--short)30; }
-.macro-regime.neutral { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent)30; }
+.macro-regime.risk_on { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-soft); }
+.macro-regime.risk_off { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-soft); }
+.macro-regime.neutral { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--yellow-soft); }
 .macro-item {
   display: flex;
   align-items: center;
@@ -186,12 +188,81 @@ body {
 .macro-label { color: var(--text-3); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
 .macro-value { color: var(--text-1); }
 .macro-change { font-weight: 500; }
-.macro-change.up { color: var(--long); }
-.macro-change.down { color: var(--short); }
+.macro-change.up { color: var(--green); }
+.macro-change.down { color: var(--red); }
 .macro-fg { padding: 2px 8px; border-radius: 3px; font-weight: 600; }
-.macro-fg.fear { background: var(--short-dim); color: var(--short); }
-.macro-fg.greed { background: var(--long-dim); color: var(--long); }
+.macro-fg.fear { background: var(--red-dim); color: var(--red); }
+.macro-fg.greed { background: var(--green-dim); color: var(--green); }
 .macro-fg.neutral-fg { background: var(--accent-dim); color: var(--accent); }
+
+/* ─── Market Overview Strip ─── */
+.market-overview {
+  display: none;
+  padding: 16px 24px;
+  background: var(--bg-0);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.market-overview.visible { display: block; }
+.market-overview-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 12px;
+}
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+.market-tile {
+  background: var(--bg-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s;
+}
+.market-tile:hover { border-color: var(--border); }
+.market-tile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.market-tile-label {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.market-tile-change {
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.market-tile-change.up { color: var(--green); background: var(--green-dim); }
+.market-tile-change.down { color: var(--red); background: var(--red-dim); }
+.market-tile-change.flat { color: var(--text-3); background: var(--bg-2); }
+.market-tile-price {
+  font-family: var(--font-data);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-0);
+}
+.market-tile-sub {
+  font-size: 10px;
+  color: var(--text-3);
+}
+/* VIX special styling */
+.market-tile.vix-elevated { border-color: var(--red-soft); }
+.market-tile.vix-low { border-color: var(--green-soft); }
 
 /* ─── Main Content ─── */
 .main {
@@ -205,7 +276,7 @@ body {
 .assets-panel {
   padding: 20px 24px;
   overflow-y: auto;
-  max-height: calc(100vh - 110px);
+  max-height: calc(100vh - 160px);
 }
 .panel-title {
   font-size: 11px;
@@ -228,8 +299,8 @@ body {
   transition: border-color 0.2s;
 }
 .asset-card:hover { border-color: var(--border); }
-.asset-card.has-signal-buy { border-left: 2px solid var(--long); }
-.asset-card.has-signal-sell { border-left: 2px solid var(--short); }
+.asset-card.has-signal-buy { border-left: 3px solid var(--green); }
+.asset-card.has-signal-sell { border-left: 3px solid var(--red); }
 .asset-header {
   display: flex;
   align-items: baseline;
@@ -252,10 +323,12 @@ body {
   font-family: var(--font-data);
   font-size: 12px;
   margin-left: 6px;
-  font-weight: 500;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
 }
-.asset-change.up { color: var(--long); }
-.asset-change.down { color: var(--short); }
+.asset-change.up { color: var(--green); background: var(--green-dim); }
+.asset-change.down { color: var(--red); background: var(--red-dim); }
 .asset-indicators {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -266,7 +339,12 @@ body {
   background: var(--bg-2);
   border-radius: 4px;
   padding: 8px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s;
 }
+.indicator.bullish { border-left-color: var(--green); }
+.indicator.bearish { border-left-color: var(--red); }
+.indicator.ind-neutral { border-left-color: var(--yellow); }
 .indicator-label {
   font-size: 9px;
   font-weight: 600;
@@ -279,8 +357,10 @@ body {
   font-family: var(--font-data);
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-1);
 }
+.indicator-value.bullish { color: var(--green); }
+.indicator-value.bearish { color: var(--red); }
+.indicator-value.ind-neutral { color: var(--yellow); }
 .indicator-sub {
   font-size: 10px;
   color: var(--text-3);
@@ -301,9 +381,9 @@ body {
   padding: 3px 10px;
   border-radius: 3px;
 }
-.signal-badge.strong_buy, .signal-badge.buy { background: var(--long-dim); color: var(--long); }
-.signal-badge.strong_sell, .signal-badge.sell { background: var(--short-dim); color: var(--short); }
-.signal-badge.neutral { background: var(--neutral-dim); color: var(--neutral); }
+.signal-badge.strong_buy, .signal-badge.buy { background: var(--green-dim); color: var(--green); }
+.signal-badge.strong_sell, .signal-badge.sell { background: var(--red-dim); color: var(--red); }
+.signal-badge.neutral { background: var(--yellow-dim); color: var(--yellow); }
 .signal-strength {
   font-family: var(--font-data);
   font-size: 11px;
@@ -339,7 +419,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  max-height: calc(100vh - 110px);
+  max-height: calc(100vh - 160px);
 }
 
 /* ─── Recommendations ─── */
@@ -362,8 +442,8 @@ body {
   height: 2px;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
-.rec-card.long::before { background: var(--long); }
-.rec-card.short::before { background: var(--short); }
+.rec-card.long::before { background: var(--green); }
+.rec-card.short::before { background: var(--red); }
 .rec-top {
   display: flex;
   align-items: center;
@@ -384,8 +464,8 @@ body {
   padding: 3px 10px;
   border-radius: 3px;
 }
-.rec-direction.long { background: var(--long-dim); color: var(--long); }
-.rec-direction.short { background: var(--short-dim); color: var(--short); }
+.rec-direction.long { background: var(--green-dim); color: var(--green); }
+.rec-direction.short { background: var(--red-dim); color: var(--red); }
 .rec-conviction {
   display: flex;
   align-items: center;
@@ -404,9 +484,9 @@ body {
   border-radius: 2px;
   transition: width 0.5s ease;
 }
-.conviction-fill.high { background: var(--long); }
+.conviction-fill.high { background: var(--green); }
 .conviction-fill.mid { background: var(--accent); }
-.conviction-fill.low { background: var(--short); }
+.conviction-fill.low { background: var(--red); }
 .conviction-label {
   font-family: var(--font-data);
   font-size: 12px;
@@ -490,8 +570,8 @@ body {
   width: 5px; height: 5px;
   border-radius: 50%;
 }
-.rec-macro-tag .dot.aligned { background: var(--long); }
-.rec-macro-tag .dot.misaligned { background: var(--short); }
+.rec-macro-tag .dot.aligned { background: var(--green); }
+.rec-macro-tag .dot.misaligned { background: var(--red); }
 
 /* ─── No Recs State ─── */
 .no-recs {
@@ -533,11 +613,11 @@ body {
 }
 .trade-row .sym { font-weight: 600; color: var(--text-0); }
 .trade-row .dir { text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
-.trade-row .dir.long { color: var(--long); }
-.trade-row .dir.short { color: var(--short); }
+.trade-row .dir.long { color: var(--green); }
+.trade-row .dir.short { color: var(--red); }
 .trade-row .pnl { font-weight: 600; }
-.trade-row .pnl.win { color: var(--long); }
-.trade-row .pnl.loss { color: var(--short); }
+.trade-row .pnl.win { color: var(--green); }
+.trade-row .pnl.loss { color: var(--red); }
 .trade-row .status { color: var(--text-3); font-size: 10px; }
 
 /* ─── Feedback Stats ─── */
@@ -707,6 +787,7 @@ body {
   .sidebar { border-left: none; border-top: 1px solid var(--border-subtle); max-height: none; }
   .assets-panel { max-height: none; }
   .assets-grid { grid-template-columns: 1fr; }
+  .market-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
@@ -729,6 +810,12 @@ body {
   <!-- Macro Banner -->
   <div class="macro-banner empty" id="macroBanner">
     Run a session to load market data
+  </div>
+
+  <!-- Market Overview Strip -->
+  <div class="market-overview" id="marketOverview">
+    <div class="market-overview-title">Market Overview</div>
+    <div class="market-grid" id="marketGrid"></div>
   </div>
 
   <!-- Main Content -->
@@ -795,6 +882,8 @@ const $runBtn = document.getElementById('runBtn');
 const $briefBtn = document.getElementById('briefBtn');
 const $symbolInput = document.getElementById('symbolInput');
 const $macroBanner = document.getElementById('macroBanner');
+const $marketOverview = document.getElementById('marketOverview');
+const $marketGrid = document.getElementById('marketGrid');
 const $assetsPanel = document.getElementById('assetsPanel');
 const $emptyState = document.getElementById('emptyState');
 const $recsSection = document.getElementById('recsSection');
@@ -835,8 +924,46 @@ function formatPct(p) {
 }
 
 function changeClass(val) {
-  if (val == null) return '';
+  if (val == null) return 'flat';
+  if (Math.abs(val) < 0.01) return 'flat';
   return val >= 0 ? 'up' : 'down';
+}
+
+// ─── Indicator sentiment classifiers ───
+function macdSentiment(macd) {
+  if (macd.crossover === 'bullish' || macd.histogram > 0) return 'bullish';
+  if (macd.crossover === 'bearish' || macd.histogram < 0) return 'bearish';
+  return 'ind-neutral';
+}
+
+function bollingerSentiment(bb) {
+  if (bb.position === 'above_upper') return 'bullish';
+  if (bb.position === 'upper_half') return 'bullish';
+  if (bb.position === 'below_lower') return 'bearish';
+  if (bb.position === 'lower_half') return 'bearish';
+  return 'ind-neutral';
+}
+
+function rsiSentiment(rsi) {
+  if (rsi.value >= 70) return 'bearish';   // overbought = danger
+  if (rsi.value <= 30) return 'bearish';   // oversold = danger
+  if (rsi.value >= 55) return 'bullish';   // trending up
+  if (rsi.value <= 45) return 'ind-neutral';
+  return 'ind-neutral';
+}
+
+function macdDisplay(macd) {
+  if (macd.crossover === 'bullish') return 'Bullish X';
+  if (macd.crossover === 'bearish') return 'Bearish X';
+  return macd.histogram > 0 ? '+ hist' : '- hist';
+}
+
+function rsiLabel(rsi) {
+  if (rsi.value >= 70) return 'overbought';
+  if (rsi.value <= 30) return 'oversold';
+  if (rsi.value >= 55) return 'bullish';
+  if (rsi.value <= 45) return 'weak';
+  return 'neutral';
 }
 
 // ─── Render Macro Banner ───
@@ -846,24 +973,6 @@ function renderMacro(macro) {
   const regime = macro.regime;
 
   let html = `<div class="macro-regime ${regime}">${regime.replace('_', ' ')}</div>`;
-
-  const items = [
-    { label: 'SPX', price: d.spx_price, change: d.spx_change_pct },
-    { label: 'QQQ', price: d.qqq_price, change: d.qqq_change_pct },
-    { label: 'DXY', price: d.dxy_price, change: d.dxy_change_pct },
-    { label: 'US10Y', price: d.us10y_yield, change: d.us10y_change_pct },
-  ];
-
-  for (const item of items) {
-    if (item.price != null) {
-      html += `
-        <div class="macro-item">
-          <span class="macro-label">${item.label}</span>
-          <span class="macro-value">${item.price.toFixed(2)}</span>
-          <span class="macro-change ${changeClass(item.change)}">${formatPct(item.change)}</span>
-        </div>`;
-    }
-  }
 
   if (d.fear_greed_index != null) {
     const fgClass = d.fear_greed_index <= 25 ? 'fear' : d.fear_greed_index >= 75 ? 'greed' : 'neutral-fg';
@@ -878,6 +987,42 @@ function renderMacro(macro) {
   $macroBanner.innerHTML = html;
 }
 
+// ─── Render Market Overview ───
+function renderMarketOverview(macro) {
+  if (!macro) return;
+  const d = macro.data;
+
+  const tiles = [
+    { label: 'S&P 500', price: d.spx_price, change: d.spx_change_pct, sub: 'SPX' },
+    { label: 'Nasdaq', price: d.qqq_price, change: d.qqq_change_pct, sub: 'QQQ ETF' },
+    { label: 'Dow Jones', price: d.dow_price, change: d.dow_change_pct, sub: 'DJIA' },
+    { label: 'Gold', price: d.gold_price, change: d.gold_change_pct, sub: 'GC Futures' },
+    { label: 'Dollar', price: d.dxy_price, change: d.dxy_change_pct, sub: 'DXY Index' },
+    { label: 'US 10Y', price: d.us10y_yield, change: d.us10y_change_pct, sub: 'Treasury Yield' },
+    { label: 'VIX', price: d.vix_price, change: d.vix_change_pct, sub: 'Volatility Index', isVix: true },
+  ];
+
+  $marketGrid.innerHTML = tiles.map(t => {
+    if (t.price == null) return '';
+    const chg = changeClass(t.change);
+    let extraClass = '';
+    if (t.isVix) {
+      extraClass = t.price >= 25 ? 'vix-elevated' : t.price <= 15 ? 'vix-low' : '';
+    }
+    return `
+      <div class="market-tile ${extraClass}">
+        <div class="market-tile-header">
+          <span class="market-tile-label">${t.label}</span>
+          <span class="market-tile-change ${chg}">${formatPct(t.change)}</span>
+        </div>
+        <div class="market-tile-price">${t.label === 'US 10Y' ? t.price.toFixed(2) + '%' : formatPrice(t.price)}</div>
+        <div class="market-tile-sub">${t.sub}</div>
+      </div>`;
+  }).join('');
+
+  $marketOverview.classList.add('visible');
+}
+
 // ─── Render Assets Grid ───
 function renderAssets(assets, leverage) {
   if (!assets || assets.length === 0) return;
@@ -887,7 +1032,6 @@ function renderAssets(assets, leverage) {
 
   $emptyState.style.display = 'none';
 
-  // Keep only the panel title + cards
   const existing = $assetsPanel.querySelector('.panel-title');
   if (!existing) {
     const title = document.createElement('div');
@@ -911,6 +1055,10 @@ function renderAssets(assets, leverage) {
     const signalClass = (tf.signal === 'buy' || tf.signal === 'strong_buy') ? 'has-signal-buy'
       : (tf.signal === 'sell' || tf.signal === 'strong_sell') ? 'has-signal-sell' : '';
 
+    const mSent = macdSentiment(tf.macd);
+    const bSent = bollingerSentiment(tf.bollinger);
+    const rSent = rsiSentiment(tf.rsi);
+
     return `
     <div class="asset-card ${signalClass}">
       <div class="asset-header">
@@ -921,20 +1069,20 @@ function renderAssets(assets, leverage) {
         <span class="asset-price">${formatPrice(a.price)}</span>
       </div>
       <div class="asset-indicators">
-        <div class="indicator">
+        <div class="indicator ${mSent}">
           <div class="indicator-label">MACD</div>
-          <div class="indicator-value">${tf.macd.crossover === 'none' ? (tf.macd.histogram > 0 ? '+ hist' : '- hist') : tf.macd.crossover}</div>
+          <div class="indicator-value ${mSent}">${macdDisplay(tf.macd)}</div>
           <div class="indicator-sub">${tf.macd.histogram.toFixed(4)}</div>
         </div>
-        <div class="indicator">
+        <div class="indicator ${bSent}">
           <div class="indicator-label">Bollinger</div>
-          <div class="indicator-value">${tf.bollinger.position.replace('_', ' ')}</div>
+          <div class="indicator-value ${bSent}">${tf.bollinger.position.replace('_', ' ')}</div>
           <div class="indicator-sub">bw ${tf.bollinger.bandwidth.toFixed(4)}</div>
         </div>
-        <div class="indicator">
+        <div class="indicator ${rSent}">
           <div class="indicator-label">RSI</div>
-          <div class="indicator-value">${tf.rsi.value.toFixed(1)}</div>
-          <div class="indicator-sub">${tf.rsi.condition}</div>
+          <div class="indicator-value ${rSent}">${tf.rsi.value.toFixed(1)}</div>
+          <div class="indicator-sub">${rsiLabel(tf.rsi)}</div>
         </div>
       </div>
       <div class="asset-signal">
@@ -956,7 +1104,6 @@ function renderAssets(assets, leverage) {
 
 // ─── Render Recommendations ───
 function renderRecs(recs) {
-  // Remove old cards
   $recsSection.querySelectorAll('.rec-card').forEach(el => el.remove());
 
   if (!recs || recs.length === 0) {
@@ -1070,10 +1217,10 @@ async function runSession() {
     sessionData = await res.json();
 
     renderMacro(sessionData.macro);
+    renderMarketOverview(sessionData.macro);
     renderAssets(sessionData.assets, sessionData.leverage);
     renderRecs(sessionData.recommendations);
 
-    // Load trades + feedback
     const [tradesRes, feedbackRes] = await Promise.all([
       fetch(`${API}/trades`).then(r => r.json()),
       fetch(`${API}/feedback`).then(r => r.json()),
@@ -1123,7 +1270,6 @@ async function copyBrief() {
     toast('Copied to clipboard');
     closeBrief();
   } catch {
-    // Fallback
     const ta = document.createElement('textarea');
     ta.value = text;
     document.body.appendChild(ta);
@@ -1158,7 +1304,6 @@ $symbolInput.addEventListener('keydown', e => { if (e.key === 'Enter') runSessio
 checkHealth();
 setInterval(checkHealth, 30000);
 
-// Load existing trades on page load
 (async () => {
   try {
     const [tradesRes, feedbackRes] = await Promise.all([
