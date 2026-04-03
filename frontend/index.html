@@ -195,6 +195,16 @@ body {
 .macro-fg.greed { background: var(--green-dim); color: var(--green); }
 .macro-fg.neutral-fg { background: var(--accent-dim); color: var(--accent); }
 
+/* Macro summary line */
+.macro-summary {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-2);
+  margin-left: auto;
+  white-space: nowrap;
+  font-style: italic;
+}
+
 /* ─── Market Overview Strip ─── */
 .market-overview {
   display: none;
@@ -288,24 +298,37 @@ body {
 }
 .assets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
 }
+
+/* ─── Asset Card — Redesigned ─── */
 .asset-card {
   background: var(--bg-1);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 16px;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  position: relative;
 }
 .asset-card:hover { border-color: var(--border); }
 .asset-card.has-signal-buy { border-left: 3px solid var(--green); }
 .asset-card.has-signal-sell { border-left: 3px solid var(--red); }
+/* Glow effect for cards with signals */
+.asset-card.has-signal-buy { box-shadow: inset 0 0 30px var(--green-dim); }
+.asset-card.has-signal-sell { box-shadow: inset 0 0 30px var(--red-dim); }
+
+/* Card header: symbol + price + sentiment badge */
 .asset-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+}
+.asset-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .asset-symbol {
   font-family: var(--font-data);
@@ -313,103 +336,212 @@ body {
   font-weight: 700;
   color: var(--text-0);
 }
-.asset-price {
-  font-family: var(--font-data);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text-0);
-}
 .asset-change {
   font-family: var(--font-data);
   font-size: 12px;
-  margin-left: 6px;
   font-weight: 600;
   padding: 1px 5px;
   border-radius: 3px;
 }
 .asset-change.up { color: var(--green); background: var(--green-dim); }
 .asset-change.down { color: var(--red); background: var(--red-dim); }
+.asset-price {
+  font-family: var(--font-data);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-0);
+}
+
+/* ─── Sentiment gauge row ─── */
+.sentiment-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border-radius: var(--radius);
+}
+.sentiment-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  min-width: 52px;
+}
+.sentiment-gauge {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-0);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+.sentiment-gauge-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+/* Bullish fills from left */
+.sentiment-gauge-fill.bullish {
+  left: 50%;
+  background: var(--green);
+}
+/* Bearish fills from center to left */
+.sentiment-gauge-fill.bearish {
+  right: 50%;
+  background: var(--red);
+}
+/* Neutral - thin center mark */
+.sentiment-gauge-fill.s-neutral {
+  left: 48%;
+  width: 4% !important;
+  background: var(--text-3);
+}
+.sentiment-gauge-center {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 8px;
+  background: var(--text-3);
+  border-radius: 1px;
+}
+.sentiment-word {
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 64px;
+  text-align: right;
+}
+.sentiment-word.bullish { color: var(--green); }
+.sentiment-word.bearish { color: var(--red); }
+.sentiment-word.s-neutral { color: var(--text-3); }
+
+/* ─── Indicators row — compact ─── */
 .asset-indicators {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 .indicator {
   background: var(--bg-2);
   border-radius: 4px;
-  padding: 8px;
+  padding: 6px 8px;
   border-left: 3px solid transparent;
   transition: border-color 0.2s;
 }
 .indicator.bullish { border-left-color: var(--green); }
 .indicator.bearish { border-left-color: var(--red); }
-.indicator.ind-neutral { border-left-color: var(--yellow); }
+.indicator.ind-neutral { border-left-color: var(--text-3); }
+.indicator-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
 .indicator-label {
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--text-3);
-  margin-bottom: 4px;
 }
 .indicator-value {
   font-family: var(--font-data);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
 }
 .indicator-value.bullish { color: var(--green); }
 .indicator-value.bearish { color: var(--red); }
-.indicator-value.ind-neutral { color: var(--yellow); }
-.indicator-sub {
-  font-size: 10px;
-  color: var(--text-3);
-  margin-top: 2px;
-  font-family: var(--font-data);
-}
-.asset-signal {
+.indicator-value.ind-neutral { color: var(--text-3); }
+
+/* ─── Leverage context — visual bars ─── */
+.leverage-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.signal-badge {
-  font-family: var(--font-data);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 3px;
-}
-.signal-badge.strong_buy, .signal-badge.buy { background: var(--green-dim); color: var(--green); }
-.signal-badge.strong_sell, .signal-badge.sell { background: var(--red-dim); color: var(--red); }
-.signal-badge.neutral { background: var(--yellow-dim); color: var(--yellow); }
-.signal-strength {
-  font-family: var(--font-data);
-  font-size: 11px;
-  color: var(--text-3);
-}
-.tf-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-top: 6px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-subtle);
-}
-.tf-label {
-  font-size: 10px;
-  color: var(--text-3);
-  font-family: var(--font-data);
-  min-width: 24px;
-}
-.leverage-line {
+  gap: 8px;
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid var(--border-subtle);
+}
+.lev-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-data);
   font-size: 11px;
   color: var(--text-2);
+}
+.lev-tag {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.funding-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.funding-dot.longs_paying { background: var(--red); }
+.funding-dot.shorts_paying { background: var(--green); }
+.funding-dot.f-neutral { background: var(--text-3); }
+.funding-label { font-size: 11px; }
+.funding-label.longs_paying { color: var(--red); }
+.funding-label.shorts_paying { color: var(--green); }
+.funding-label.f-neutral { color: var(--text-3); }
+.oi-value {
+  font-size: 11px;
+  color: var(--text-2);
+}
+.oi-change {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 0 4px;
+  border-radius: 2px;
+}
+.oi-change.up { color: var(--green); }
+.oi-change.down { color: var(--red); }
+
+/* ─── Confirmation TF — compact inline ─── */
+.tf-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-data);
+  font-size: 11px;
+}
+.tf-label {
+  font-size: 9px;
+  color: var(--text-3);
+  font-family: var(--font-data);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  min-width: 20px;
+}
+.tf-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tf-dot.aligned { background: var(--green); }
+.tf-dot.conflicting { background: var(--red); }
+.tf-dot.tf-neutral { background: var(--text-3); }
+.tf-summary {
+  color: var(--text-2);
+  font-size: 11px;
 }
 
 /* ─── Right Sidebar ─── */
@@ -573,26 +705,57 @@ body {
 .rec-macro-tag .dot.aligned { background: var(--green); }
 .rec-macro-tag .dot.misaligned { background: var(--red); }
 
-/* ─── No Recs State ─── */
+/* ─── No Recs State — Enhanced ─── */
 .no-recs {
   text-align: center;
-  padding: 40px 20px;
+  padding: 32px 20px;
   color: var(--text-3);
 }
 .no-recs-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
-  opacity: 0.3;
+  font-size: 28px;
+  margin-bottom: 10px;
+  opacity: 0.25;
 }
 .no-recs-title {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-2);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .no-recs-sub {
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.no-recs-context {
+  text-align: left;
+  background: var(--bg-2);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.no-recs-context-title {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+.no-recs-context-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.no-recs-context-item .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
 }
 
 /* ─── Trades Section ─── */
@@ -929,6 +1092,19 @@ function changeClass(val) {
   return val >= 0 ? 'up' : 'down';
 }
 
+function formatOI(oi) {
+  if (oi == null) return 'N/A';
+  if (oi >= 1e9) return (oi / 1e9).toFixed(1) + 'B';
+  if (oi >= 1e6) return (oi / 1e6).toFixed(1) + 'M';
+  if (oi >= 1e3) return (oi / 1e3).toFixed(0) + 'K';
+  return oi.toLocaleString();
+}
+
+function formatFunding(rate) {
+  if (rate == null) return 'N/A';
+  return (rate * 100).toFixed(4) + '%';
+}
+
 // ─── Indicator sentiment classifiers ───
 function macdSentiment(macd) {
   if (macd.crossover === 'bullish' || macd.histogram > 0) return 'bullish';
@@ -945,9 +1121,9 @@ function bollingerSentiment(bb) {
 }
 
 function rsiSentiment(rsi) {
-  if (rsi.value >= 70) return 'bearish';   // overbought = danger
-  if (rsi.value <= 30) return 'bearish';   // oversold = danger
-  if (rsi.value >= 55) return 'bullish';   // trending up
+  if (rsi.value >= 70) return 'bearish';
+  if (rsi.value <= 30) return 'bearish';
+  if (rsi.value >= 55) return 'bullish';
   if (rsi.value <= 45) return 'ind-neutral';
   return 'ind-neutral';
 }
@@ -955,15 +1131,90 @@ function rsiSentiment(rsi) {
 function macdDisplay(macd) {
   if (macd.crossover === 'bullish') return 'Bullish X';
   if (macd.crossover === 'bearish') return 'Bearish X';
-  return macd.histogram > 0 ? '+ hist' : '- hist';
+  return macd.histogram > 0 ? 'Positive' : 'Negative';
 }
 
 function rsiLabel(rsi) {
-  if (rsi.value >= 70) return 'overbought';
-  if (rsi.value <= 30) return 'oversold';
-  if (rsi.value >= 55) return 'bullish';
-  if (rsi.value <= 45) return 'weak';
-  return 'neutral';
+  if (rsi.value >= 70) return 'Overbought';
+  if (rsi.value <= 30) return 'Oversold';
+  if (rsi.value >= 55) return 'Bullish';
+  if (rsi.value <= 45) return 'Weak';
+  return 'Neutral';
+}
+
+function bbDisplay(bb) {
+  const map = {
+    'above_upper': 'Overbought',
+    'upper_half': 'Upper band',
+    'lower_half': 'Lower band',
+    'below_lower': 'Oversold'
+  };
+  return map[bb.position] || 'Middle';
+}
+
+// ─── Compute overall card sentiment ───
+function computeSentiment(tf, confTf) {
+  let score = 0; // -3 to +3 scale
+  const mSent = macdSentiment(tf.macd);
+  const bSent = bollingerSentiment(tf.bollinger);
+  const rSent = rsiSentiment(tf.rsi);
+
+  if (mSent === 'bullish') score += 1;
+  else if (mSent === 'bearish') score -= 1;
+
+  if (bSent === 'bullish') score += 1;
+  else if (bSent === 'bearish') score -= 1;
+
+  if (rSent === 'bullish') score += 1;
+  else if (rSent === 'bearish') score -= 1;
+
+  // Confirmation TF alignment bonus
+  if (confTf) {
+    const confMacd = macdSentiment(confTf.macd);
+    const confRsi = rsiSentiment(confTf.rsi);
+    if (score > 0 && confMacd === 'bullish') score += 0.5;
+    if (score < 0 && confMacd === 'bearish') score -= 0.5;
+    if (score > 0 && confRsi === 'bullish') score += 0.5;
+    if (score < 0 && confRsi === 'bearish') score -= 0.5;
+  }
+
+  // Clamp
+  score = Math.max(-4, Math.min(4, score));
+
+  let label, cls;
+  if (score >= 2) { label = 'Bullish'; cls = 'bullish'; }
+  else if (score >= 1) { label = 'Leaning bull'; cls = 'bullish'; }
+  else if (score <= -2) { label = 'Bearish'; cls = 'bearish'; }
+  else if (score <= -1) { label = 'Leaning bear'; cls = 'bearish'; }
+  else { label = 'Neutral'; cls = 's-neutral'; }
+
+  return { score, label, cls, pct: Math.abs(score) / 4 * 100 };
+}
+
+// ─── Check TF alignment ───
+function tfAlignment(primaryTf, confTf) {
+  if (!confTf) return { aligned: false, label: 'No data', cls: 'tf-neutral' };
+  const pMacd = macdSentiment(primaryTf.macd);
+  const cMacd = macdSentiment(confTf.macd);
+  const pRsi = rsiSentiment(primaryTf.rsi);
+  const cRsi = rsiSentiment(confTf.rsi);
+
+  const macdMatch = pMacd === cMacd && pMacd !== 'ind-neutral';
+  const rsiMatch = pRsi === cRsi && pRsi !== 'ind-neutral';
+
+  if (macdMatch && rsiMatch) return { aligned: true, label: 'Aligned', cls: 'aligned' };
+  if (macdMatch || rsiMatch) return { aligned: false, label: 'Mixed', cls: 'tf-neutral' };
+  // Check for conflict
+  if ((pMacd === 'bullish' && cMacd === 'bearish') || (pMacd === 'bearish' && cMacd === 'bullish'))
+    return { aligned: false, label: 'Conflicting', cls: 'conflicting' };
+  return { aligned: false, label: 'Neutral', cls: 'tf-neutral' };
+}
+
+// ─── Macro regime summary text ───
+function regimeSummary(regime) {
+  if (regime === 'risk_off') return 'Favor shorts, reduce long size';
+  if (regime === 'risk_on') return 'Favor longs, reduce short size';
+  return 'No directional macro bias';
 }
 
 // ─── Render Macro Banner ───
@@ -982,6 +1233,29 @@ function renderMacro(macro) {
         <span class="macro-fg ${fgClass}">${d.fear_greed_index} ${d.fear_greed_label || ''}</span>
       </div>`;
   }
+
+  // Add VIX if available
+  if (d.vix_price != null) {
+    const vixColor = d.vix_price >= 25 ? 'color:var(--red)' : d.vix_price <= 15 ? 'color:var(--green)' : 'color:var(--text-1)';
+    html += `
+      <div class="macro-item">
+        <span class="macro-label">VIX</span>
+        <span class="macro-value" style="${vixColor};font-weight:600">${d.vix_price.toFixed(1)}</span>
+      </div>`;
+  }
+
+  // Add DXY if available
+  if (d.dxy_price != null) {
+    html += `
+      <div class="macro-item">
+        <span class="macro-label">DXY</span>
+        <span class="macro-value">${d.dxy_price.toFixed(1)}</span>
+        <span class="macro-change ${changeClass(d.dxy_change_pct)}">${formatPct(d.dxy_change_pct)}</span>
+      </div>`;
+  }
+
+  // Summary hint
+  html += `<span class="macro-summary">${regimeSummary(regime)}</span>`;
 
   $macroBanner.className = 'macro-banner';
   $macroBanner.innerHTML = html;
@@ -1047,7 +1321,18 @@ function renderAssets(assets, leverage) {
     $assetsPanel.appendChild(gridEl);
   }
 
-  gridEl.innerHTML = assets.map(a => {
+  // Sort: cards with signals first, then by absolute sentiment score
+  const scored = assets.map(a => {
+    const sent = computeSentiment(a.primary_tf, a.confirmation_tf);
+    const hasSignal = ['buy','strong_buy','sell','strong_sell'].includes(a.primary_tf.signal);
+    return { asset: a, sent, hasSignal };
+  });
+  scored.sort((a, b) => {
+    if (a.hasSignal !== b.hasSignal) return a.hasSignal ? -1 : 1;
+    return Math.abs(b.sent.score) - Math.abs(a.sent.score);
+  });
+
+  gridEl.innerHTML = scored.map(({ asset: a, sent }) => {
     const tf = a.primary_tf;
     const conf = a.confirmation_tf;
     const lev = levMap[a.symbol];
@@ -1059,45 +1344,85 @@ function renderAssets(assets, leverage) {
     const bSent = bollingerSentiment(tf.bollinger);
     const rSent = rsiSentiment(tf.rsi);
 
+    // TF alignment
+    const tfAlign = tfAlignment(tf, conf);
+
+    // Leverage context
+    let levHtml = '';
+    if (lev) {
+      const fSent = lev.funding_sentiment || 'neutral';
+      const fClass = fSent === 'longs_paying' ? 'longs_paying' : fSent === 'shorts_paying' ? 'shorts_paying' : 'f-neutral';
+      const fLabel = fSent === 'longs_paying' ? 'Longs pay' : fSent === 'shorts_paying' ? 'Shorts pay' : 'Neutral';
+      const oiStr = formatOI(lev.open_interest);
+      const oiChg = lev.oi_change_pct;
+      levHtml = `
+      <div class="leverage-row">
+        <div class="lev-item">
+          <span class="lev-tag">Funding</span>
+          <span class="funding-dot ${fClass}"></span>
+          <span class="funding-label ${fClass}">${fLabel}</span>
+          ${lev.funding_rate != null ? `<span style="color:var(--text-3);font-size:10px">${formatFunding(lev.funding_rate)}</span>` : ''}
+        </div>
+        <div class="lev-item" style="margin-left:auto">
+          <span class="lev-tag">OI</span>
+          <span class="oi-value">${oiStr}</span>
+          ${oiChg != null ? `<span class="oi-change ${oiChg >= 0 ? 'up' : 'down'}">${formatPct(oiChg)}</span>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // Confirmation TF row
+    let confHtml = '';
+    if (conf) {
+      confHtml = `
+      <div class="tf-row">
+        <span class="tf-label">4H</span>
+        <span class="tf-dot ${tfAlign.cls}"></span>
+        <span class="tf-summary">${tfAlign.label} &middot; RSI ${conf.rsi.value.toFixed(0)} &middot; MACD ${conf.macd.crossover === 'none' ? (conf.macd.histogram > 0 ? 'pos' : 'neg') : conf.macd.crossover}</span>
+      </div>`;
+    }
+
     return `
     <div class="asset-card ${signalClass}">
       <div class="asset-header">
-        <div>
+        <div class="asset-header-left">
           <span class="asset-symbol">${a.symbol}</span>
           <span class="asset-change ${changeClass(a.change_24h_pct)}">${formatPct(a.change_24h_pct)}</span>
         </div>
         <span class="asset-price">${formatPrice(a.price)}</span>
       </div>
+
+      <div class="sentiment-row">
+        <span class="sentiment-label">Bias</span>
+        <div class="sentiment-gauge">
+          <div class="sentiment-gauge-center"></div>
+          <div class="sentiment-gauge-fill ${sent.cls}" style="width:${sent.pct / 2}%"></div>
+        </div>
+        <span class="sentiment-word ${sent.cls}">${sent.label}</span>
+      </div>
+
       <div class="asset-indicators">
         <div class="indicator ${mSent}">
-          <div class="indicator-label">MACD</div>
+          <div class="indicator-top">
+            <span class="indicator-label">MACD</span>
+          </div>
           <div class="indicator-value ${mSent}">${macdDisplay(tf.macd)}</div>
-          <div class="indicator-sub">${tf.macd.histogram.toFixed(4)}</div>
         </div>
         <div class="indicator ${bSent}">
-          <div class="indicator-label">Bollinger</div>
-          <div class="indicator-value ${bSent}">${tf.bollinger.position.replace('_', ' ')}</div>
-          <div class="indicator-sub">bw ${tf.bollinger.bandwidth.toFixed(4)}</div>
+          <div class="indicator-top">
+            <span class="indicator-label">Bollinger</span>
+          </div>
+          <div class="indicator-value ${bSent}">${bbDisplay(tf.bollinger)}</div>
         </div>
         <div class="indicator ${rSent}">
-          <div class="indicator-label">RSI</div>
-          <div class="indicator-value ${rSent}">${tf.rsi.value.toFixed(1)}</div>
-          <div class="indicator-sub">${rsiLabel(tf.rsi)}</div>
+          <div class="indicator-top">
+            <span class="indicator-label">RSI</span>
+          </div>
+          <div class="indicator-value ${rSent}">${tf.rsi.value.toFixed(0)} <span style="font-size:10px;font-weight:400;color:var(--text-3)">${rsiLabel(tf.rsi)}</span></div>
         </div>
       </div>
-      <div class="asset-signal">
-        <span class="signal-badge ${tf.signal}">${tf.signal.replace('_', ' ')}</span>
-        <span class="signal-strength">strength ${tf.signal_strength}</span>
-      </div>
-      ${conf ? `
-      <div class="tf-row">
-        <span class="tf-label">4h</span>
-        <span class="signal-badge ${conf.signal}" style="font-size:10px;padding:2px 6px">${conf.signal.replace('_', ' ')}</span>
-        <span class="signal-strength">RSI ${conf.rsi.value.toFixed(1)}</span>
-        <span class="signal-strength">MACD ${conf.macd.crossover}</span>
-      </div>` : ''}
-      ${lev ? `
-      <div class="leverage-line">${lev.positioning_summary || 'No leverage data'}</div>` : ''}
+      ${confHtml}
+      ${levHtml}
     </div>`;
   }).join('');
 }
@@ -1108,8 +1433,40 @@ function renderRecs(recs) {
 
   if (!recs || recs.length === 0) {
     $noRecs.style.display = 'block';
+    const regime = sessionData?.macro?.regime || 'unknown';
+    const regimeLabel = regime.replace('_', ' ').toUpperCase();
+    const fg = sessionData?.macro?.data?.fear_greed_index;
+    const assetCount = sessionData?.assets?.length || 0;
+
     $noRecs.querySelector('.no-recs-title').textContent = 'No setups found';
-    $noRecs.querySelector('.no-recs-sub').textContent = 'No assets met the confluence threshold this session. No trade is a valid outcome.';
+    $noRecs.querySelector('.no-recs-sub').textContent = 'No assets met the confluence threshold. No trade is a valid outcome.';
+
+    // Build context block
+    let contextEl = $noRecs.querySelector('.no-recs-context');
+    if (!contextEl) {
+      contextEl = document.createElement('div');
+      contextEl.className = 'no-recs-context';
+      $noRecs.appendChild(contextEl);
+    }
+
+    let contextHtml = `<div class="no-recs-context-title">Why no setups?</div>`;
+    contextHtml += `<div class="no-recs-context-item"><span class="dot" style="background:var(--text-3)"></span><span>${assetCount} assets scanned across 1H + 4H timeframes</span></div>`;
+
+    if (regime === 'risk_off') {
+      contextHtml += `<div class="no-recs-context-item"><span class="dot" style="background:var(--red)"></span><span>Risk-off regime filters out weak long setups</span></div>`;
+    } else if (regime === 'risk_on') {
+      contextHtml += `<div class="no-recs-context-item"><span class="dot" style="background:var(--green)"></span><span>Risk-on regime filters out weak short setups</span></div>`;
+    }
+
+    if (fg != null && fg <= 25) {
+      contextHtml += `<div class="no-recs-context-item"><span class="dot" style="background:var(--red)"></span><span>Extreme fear (${fg}) -- crowd is panicking, contrarian longs need extra conviction</span></div>`;
+    } else if (fg != null && fg >= 75) {
+      contextHtml += `<div class="no-recs-context-item"><span class="dot" style="background:var(--green)"></span><span>Extreme greed (${fg}) -- crowd is euphoric, longs are crowded</span></div>`;
+    }
+
+    contextHtml += `<div class="no-recs-context-item"><span class="dot" style="background:var(--accent)"></span><span>Need 2+ indicators aligning with macro for a setup</span></div>`;
+
+    contextEl.innerHTML = contextHtml;
     return;
   }
 
