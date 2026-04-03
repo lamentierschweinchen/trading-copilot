@@ -5,8 +5,11 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.agents import macro_scout, market_intel, leverage_context, synthesizer
@@ -262,3 +265,9 @@ Key rules:
 What setups do you see? Be specific with price levels."""
 
     return brief
+
+
+# --- Serve frontend as static files (must be last) ---
+_frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
+if _frontend_dir.is_dir():
+    app.mount("/", StaticFiles(directory=str(_frontend_dir), html=True), name="frontend")
