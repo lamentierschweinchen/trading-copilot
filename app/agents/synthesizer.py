@@ -31,7 +31,11 @@ These are scalps and quick swings — in and out within hours. Funding rates are
    - If funding is negative and you're going long, that's contrarian — increase conviction if technicals confirm.
    - High funding rates in either direction mean the position is expensive to hold. Tighter timeframes.
 
-4. TIMEFRAME ALIGNMENT: If the 1h and 4h signals agree, increase conviction. If they conflict, note it and reduce conviction.
+4. TIMEFRAME ALIGNMENT: Check all three timeframes (15m, 1h, 4h).
+   - If all three agree, strong conviction boost.
+   - If 1h and 4h agree but 15m diverges, minor concern (15m is noisy).
+   - If 1h and 4h conflict, reduce conviction regardless of 15m.
+   - 15m is your entry timing tool — use it to refine entry zones, not to drive direction.
 
 ## Leverage Sizing (conviction → leverage)
 
@@ -176,8 +180,13 @@ Data: SPX {d.spx_price or 'N/A'} ({_fmt(d.spx_change_pct)}) | QQQ {d.qqq_price o
     for a in assets:
         tf = a.primary_tf
         conf = a.confirmation_tf
+        scalp = a.scalp_tf
         change_str = f"{a.change_24h_pct:+.1f}%" if a.change_24h_pct is not None else "N/A"
-        line = f"""### {a.symbol} — ${a.price:,.2f} ({change_str} 24h)
+        line = f"""### {a.symbol} — ${a.price:,.2f} ({change_str} 24h)"""
+        if scalp:
+            line += f"""
+Scalp ({scalp.timeframe}): Signal={scalp.signal.value} | MACD crossover={scalp.macd.crossover}, histogram={scalp.macd.histogram:.4f} | BB: {scalp.bollinger.position} | RSI: {scalp.rsi.value} ({scalp.rsi.condition})"""
+        line += f"""
 Primary ({tf.timeframe}): Signal={tf.signal.value} (strength {tf.signal_strength}) | MACD: histogram={tf.macd.histogram}, crossover={tf.macd.crossover} | BB: position={tf.bollinger.position}, bandwidth={tf.bollinger.bandwidth} | RSI: {tf.rsi.value} ({tf.rsi.condition})"""
         if conf:
             line += f"""
@@ -268,7 +277,8 @@ def _run_local(
         direction = Direction.LONG if is_long else Direction.SHORT
         conviction = 5 + max(bullish_count, bearish_count) - 2  # base 5, +1 per extra indicator
 
-        # --- 2. Timeframe alignment ---
+        # --- 2. Timeframe alignment (15m, 1h, 4h) ---
+        scalp = asset.scalp_tf
         if conf:
             primary_bullish = tf.signal in (Signal.STRONG_BUY, Signal.BUY)
             conf_bullish = conf.signal in (Signal.STRONG_BUY, Signal.BUY)
@@ -276,9 +286,16 @@ def _run_local(
             conf_bearish = conf.signal in (Signal.STRONG_SELL, Signal.SELL)
 
             if (is_long and primary_bullish and conf_bullish) or (not is_long and primary_bearish and conf_bearish):
-                conviction += 1  # timeframes agree
+                conviction += 1  # 1h + 4h agree
             elif (is_long and conf_bearish) or (not is_long and conf_bullish):
-                conviction -= 1  # timeframes conflict
+                conviction -= 1  # 1h + 4h conflict
+
+        # 15m adds a small bonus if it aligns with 1h direction
+        if scalp:
+            scalp_bullish = scalp.signal in (Signal.STRONG_BUY, Signal.BUY)
+            scalp_bearish = scalp.signal in (Signal.STRONG_SELL, Signal.SELL)
+            if (is_long and scalp_bullish) or (not is_long and scalp_bearish):
+                conviction += 1  # all three timeframes align
 
         # --- 3. Macro filter ---
         macro_aligned = True
@@ -348,6 +365,12 @@ def _run_local(
                 rationale_parts.append("price above upper BB")
 
         rationale = f"{lev_str} {direction.value} — {asset.symbol} shows {' + '.join(rationale_parts)} on {tf.timeframe}."
+        if scalp:
+            scalp_agrees = (is_long and scalp.signal in (Signal.STRONG_BUY, Signal.BUY)) or (not is_long and scalp.signal in (Signal.STRONG_SELL, Signal.SELL))
+            if scalp_agrees:
+                rationale += f" 15m confirms entry timing."
+            else:
+                rationale += f" 15m not yet aligned — wait for entry."
         if conf:
             rationale += f" {conf.timeframe} confirms with {conf.signal.value} signal."
         if lc and lc.funding_sentiment and lc.funding_sentiment != "neutral":

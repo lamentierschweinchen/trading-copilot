@@ -118,8 +118,9 @@ class AssetIntel(BaseModel):
     price: float
     change_24h_pct: float | None = None
     volume_24h: float | None = None
-    primary_tf: TechnicalSnapshot
-    confirmation_tf: TechnicalSnapshot | None = None
+    scalp_tf: TechnicalSnapshot | None = None       # 15m
+    primary_tf: TechnicalSnapshot                     # 1h
+    confirmation_tf: TechnicalSnapshot | None = None  # 4h
 
 
 class LeverageContext(BaseModel):

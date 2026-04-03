@@ -27,8 +27,9 @@ async def _analyze_asset(symbol: str) -> AssetIntel:
     asset_config = settings.ASSETS[symbol]
     binance_sym = asset_config["binance"]
 
-    # Fetch primary and confirmation timeframe klines + 24h stats concurrently
-    primary_klines, confirm_klines, ticker = await asyncio.gather(
+    # Fetch all three timeframes + 24h stats concurrently
+    scalp_klines, primary_klines, confirm_klines, ticker = await asyncio.gather(
+        fetch_klines(binance_sym, settings.SCALP_TIMEFRAME, settings.KLINE_LIMIT),
         fetch_klines(binance_sym, settings.PRIMARY_TIMEFRAME, settings.KLINE_LIMIT),
         fetch_klines(binance_sym, settings.CONFIRMATION_TIMEFRAME, settings.KLINE_LIMIT),
         fetch_ticker_24h(binance_sym),
@@ -36,6 +37,10 @@ async def _analyze_asset(symbol: str) -> AssetIntel:
 
     # Compute technicals
     primary_tf = analyze_klines(primary_klines, symbol, settings.PRIMARY_TIMEFRAME)
+
+    scalp_tf = None
+    if scalp_klines:
+        scalp_tf = analyze_klines(scalp_klines, symbol, settings.SCALP_TIMEFRAME)
 
     confirmation_tf = None
     if confirm_klines:
@@ -55,6 +60,7 @@ async def _analyze_asset(symbol: str) -> AssetIntel:
         price=primary_tf.price,
         change_24h_pct=change_24h,
         volume_24h=volume_24h,
+        scalp_tf=scalp_tf,
         primary_tf=primary_tf,
         confirmation_tf=confirmation_tf,
     )

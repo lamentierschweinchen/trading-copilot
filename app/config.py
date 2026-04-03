@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     }
 
     # Timeframes for kline data
+    SCALP_TIMEFRAME: ClassVar[str] = "15m"
     PRIMARY_TIMEFRAME: ClassVar[str] = "1h"
     CONFIRMATION_TIMEFRAME: ClassVar[str] = "4h"
     KLINE_LIMIT: ClassVar[int] = 200  # enough for indicator computation

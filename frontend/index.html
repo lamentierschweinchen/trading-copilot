@@ -26,9 +26,11 @@
   --green: #00d4aa;
   --green-dim: #00d4aa18;
   --green-soft: #00d4aa40;
+  --green-muted: #00d4aa90;
   --red: #ff6b6b;
   --red-dim: #ff6b6b18;
   --red-soft: #ff6b6b40;
+  --red-muted: #ff6b6b90;
   --yellow: #e8a819;
   --yellow-dim: #e8a81918;
   --yellow-soft: #e8a81940;
@@ -419,7 +421,9 @@ body {
   text-align: right;
 }
 .sentiment-word.bullish { color: var(--green); }
+.sentiment-word.bullish-weak { color: var(--green-muted); }
 .sentiment-word.bearish { color: var(--red); }
+.sentiment-word.bearish-weak { color: var(--red-muted); }
 .sentiment-word.s-neutral { color: var(--text-3); }
 
 /* ─── Indicators row — compact ─── */
@@ -437,7 +441,9 @@ body {
   transition: border-color 0.2s;
 }
 .indicator.bullish { border-left-color: var(--green); }
+.indicator.bullish-weak { border-left-color: var(--green-muted); }
 .indicator.bearish { border-left-color: var(--red); }
+.indicator.bearish-weak { border-left-color: var(--red-muted); }
 .indicator.ind-neutral { border-left-color: var(--text-3); }
 .indicator-top {
   display: flex;
@@ -458,7 +464,9 @@ body {
   font-weight: 600;
 }
 .indicator-value.bullish { color: var(--green); }
+.indicator-value.bullish-weak { color: var(--green-muted); }
 .indicator-value.bearish { color: var(--red); }
+.indicator-value.bearish-weak { color: var(--red-muted); }
 .indicator-value.ind-neutral { color: var(--text-3); }
 
 /* ─── Leverage context — visual bars ─── */
@@ -1107,24 +1115,27 @@ function formatFunding(rate) {
 
 // ─── Indicator sentiment classifiers ───
 function macdSentiment(macd) {
-  if (macd.crossover === 'bullish' || macd.histogram > 0) return 'bullish';
-  if (macd.crossover === 'bearish' || macd.histogram < 0) return 'bearish';
+  if (macd.crossover === 'bullish') return 'bullish';
+  if (macd.crossover === 'bearish') return 'bearish';
+  if (macd.histogram > 0) return 'bullish-weak';
+  if (macd.histogram < 0) return 'bearish-weak';
   return 'ind-neutral';
 }
 
 function bollingerSentiment(bb) {
   if (bb.position === 'above_upper') return 'bullish';
-  if (bb.position === 'upper_half') return 'bullish';
   if (bb.position === 'below_lower') return 'bearish';
-  if (bb.position === 'lower_half') return 'bearish';
+  if (bb.position === 'upper_half') return 'bullish-weak';
+  if (bb.position === 'lower_half') return 'bearish-weak';
   return 'ind-neutral';
 }
 
 function rsiSentiment(rsi) {
   if (rsi.value >= 70) return 'bearish';
   if (rsi.value <= 30) return 'bearish';
-  if (rsi.value >= 55) return 'bullish';
-  if (rsi.value <= 45) return 'ind-neutral';
+  if (rsi.value >= 60) return 'bullish';
+  if (rsi.value >= 55) return 'bullish-weak';
+  if (rsi.value <= 40) return 'bearish-weak';
   return 'ind-neutral';
 }
 
@@ -1153,22 +1164,29 @@ function bbDisplay(bb) {
 }
 
 // ─── Compute overall card sentiment ───
-function computeSentiment(tf, confTf) {
-  let score = 0; // -3 to +3 scale
+function computeSentiment(tf, confTf, scalpTf) {
+  let score = 0; // -5 to +5 scale (3 from 1h + 1 from 4h + 1 from 15m)
   const mSent = macdSentiment(tf.macd);
   const bSent = bollingerSentiment(tf.bollinger);
   const rSent = rsiSentiment(tf.rsi);
 
+  // Primary 1h indicators: strong = 1, weak = 0.5
   if (mSent === 'bullish') score += 1;
+  else if (mSent === 'bullish-weak') score += 0.5;
   else if (mSent === 'bearish') score -= 1;
+  else if (mSent === 'bearish-weak') score -= 0.5;
 
   if (bSent === 'bullish') score += 1;
+  else if (bSent === 'bullish-weak') score += 0.5;
   else if (bSent === 'bearish') score -= 1;
+  else if (bSent === 'bearish-weak') score -= 0.5;
 
   if (rSent === 'bullish') score += 1;
+  else if (rSent === 'bullish-weak') score += 0.5;
   else if (rSent === 'bearish') score -= 1;
+  else if (rSent === 'bearish-weak') score -= 0.5;
 
-  // Confirmation TF alignment bonus
+  // 4h confirmation alignment bonus (weight: 0.5 each)
   if (confTf) {
     const confMacd = macdSentiment(confTf.macd);
     const confRsi = rsiSentiment(confTf.rsi);
@@ -1178,17 +1196,24 @@ function computeSentiment(tf, confTf) {
     if (score < 0 && confRsi === 'bearish') score -= 0.5;
   }
 
+  // 15m scalp alignment (weight: 0.5 — entry timing, not direction)
+  if (scalpTf) {
+    const scalpMacd = macdSentiment(scalpTf.macd);
+    if (score > 0 && scalpMacd === 'bullish') score += 0.5;
+    if (score < 0 && scalpMacd === 'bearish') score -= 0.5;
+  }
+
   // Clamp
-  score = Math.max(-4, Math.min(4, score));
+  score = Math.max(-5, Math.min(5, score));
 
   let label, cls;
-  if (score >= 2) { label = 'Bullish'; cls = 'bullish'; }
-  else if (score >= 1) { label = 'Leaning bull'; cls = 'bullish'; }
-  else if (score <= -2) { label = 'Bearish'; cls = 'bearish'; }
-  else if (score <= -1) { label = 'Leaning bear'; cls = 'bearish'; }
+  if (score >= 2.5) { label = 'Bullish'; cls = 'bullish'; }
+  else if (score >= 1) { label = 'Leaning bull'; cls = 'bullish-weak'; }
+  else if (score <= -2.5) { label = 'Bearish'; cls = 'bearish'; }
+  else if (score <= -1) { label = 'Leaning bear'; cls = 'bearish-weak'; }
   else { label = 'Neutral'; cls = 's-neutral'; }
 
-  return { score, label, cls, pct: Math.abs(score) / 4 * 100 };
+  return { score, label, cls, pct: Math.abs(score) / 5 * 100 };
 }
 
 // ─── Check TF alignment ───
@@ -1321,20 +1346,16 @@ function renderAssets(assets, leverage) {
     $assetsPanel.appendChild(gridEl);
   }
 
-  // Sort: cards with signals first, then by absolute sentiment score
+  // Keep original order (config defines assets by market cap: BTC, ETH, SOL, ...)
   const scored = assets.map(a => {
-    const sent = computeSentiment(a.primary_tf, a.confirmation_tf);
-    const hasSignal = ['buy','strong_buy','sell','strong_sell'].includes(a.primary_tf.signal);
-    return { asset: a, sent, hasSignal };
-  });
-  scored.sort((a, b) => {
-    if (a.hasSignal !== b.hasSignal) return a.hasSignal ? -1 : 1;
-    return Math.abs(b.sent.score) - Math.abs(a.sent.score);
+    const sent = computeSentiment(a.primary_tf, a.confirmation_tf, a.scalp_tf);
+    return { asset: a, sent };
   });
 
   gridEl.innerHTML = scored.map(({ asset: a, sent }) => {
     const tf = a.primary_tf;
     const conf = a.confirmation_tf;
+    const scalp = a.scalp_tf;
     const lev = levMap[a.symbol];
 
     const signalClass = (tf.signal === 'buy' || tf.signal === 'strong_buy') ? 'has-signal-buy'
@@ -1371,10 +1392,22 @@ function renderAssets(assets, leverage) {
       </div>`;
     }
 
-    // Confirmation TF row
-    let confHtml = '';
+    // Multi-timeframe rows (15m + 4h)
+    let tfHtml = '';
+
+    if (scalp) {
+      const scalpAlign = tfAlignment(tf, scalp);
+      const scalpMacdStr = scalp.macd.crossover === 'none' ? (scalp.macd.histogram > 0 ? 'pos' : 'neg') : scalp.macd.crossover;
+      tfHtml += `
+      <div class="tf-row">
+        <span class="tf-label">15M</span>
+        <span class="tf-dot ${scalpAlign.cls}"></span>
+        <span class="tf-summary">RSI ${scalp.rsi.value.toFixed(0)} &middot; MACD ${scalpMacdStr} &middot; BB ${scalp.bollinger.position.replace('_',' ')}</span>
+      </div>`;
+    }
+
     if (conf) {
-      confHtml = `
+      tfHtml += `
       <div class="tf-row">
         <span class="tf-label">4H</span>
         <span class="tf-dot ${tfAlign.cls}"></span>
@@ -1421,7 +1454,7 @@ function renderAssets(assets, leverage) {
           <div class="indicator-value ${rSent}">${tf.rsi.value.toFixed(0)} <span style="font-size:10px;font-weight:400;color:var(--text-3)">${rsiLabel(tf.rsi)}</span></div>
         </div>
       </div>
-      ${confHtml}
+      ${tfHtml}
       ${levHtml}
     </div>`;
   }).join('');
