@@ -1,0 +1,107 @@
+{
+  "date": "2026-04-03",
+  "timestamp": "2026-04-03 20:10 UTC",
+  "macro": {
+    "regime": "risk_off",
+    "confidence": 0.4,
+    "summary": "Regime: risk_off (confidence 40%). Extreme fear (9)",
+    "data": {
+      "spx_price": null,
+      "spx_change_pct": null,
+      "qqq_price": null,
+      "qqq_change_pct": null,
+      "dxy_price": null,
+      "dxy_change_pct": null,
+      "us10y_yield": null,
+      "us10y_change_pct": null,
+      "fear_greed_index": 9,
+      "fear_greed_label": "Extreme Fear",
+      "fetched_at": "2026-04-03 20:10:50.618427"
+    }
+  },
+  "recommendations": [],
+  "feedback": {
+    "total_trades": 0,
+    "resolved_trades": 0,
+    "win_rate": null,
+    "avg_conviction_winners": null,
+    "avg_conviction_losers": null,
+    "best_asset": null,
+    "worst_asset": null,
+    "regime_performance": null,
+    "summary": "No resolved trades yet. Track record building."
+  },
+  "assets_analyzed": 10,
+  "assets_summary": [
+    {
+      "symbol": "BTC",
+      "price": 66809.94,
+      "signal_1h": "neutral",
+      "signal_4h": "neutral",
+      "rsi_1h": 48.24
+    },
+    {
+      "symbol": "ETH",
+      "price": 2049.42,
+      "signal_1h": "neutral",
+      "signal_4h": "neutral",
+      "rsi_1h": 42.98
+    },
+    {
+      "symbol": "SOL",
+      "price": 80.19,
+      "signal_1h": "neutral",
+      "signal_4h": "neutral",
+      "rsi_1h": 54.52
+    },
+    {
+      "symbol": "BNB",
+      "price": 587.87,
+      "signal_1h": "neutral",
+      "signal_4h": "neutral",
+      "rsi_1h": 52.1
+    },
+    {
+      "symbol": "XRP",
+      "price": 1.32,
+      "signal_1h": "neutral",
+      "signal_4h": "buy",
+      "rsi_1h": 52.91
+    },
+    {
+      "symbol": "ADA",
+      "price": 0.25,
+      "signal_1h": "neutral",
+      "signal_4h": "neutral",
+      "rsi_1h": 69.25
+    },
+    {
+      "symbol": "DOGE",
+      "price": 0.09,
+      "signal_1h": "sell",
+      "signal_4h": "neutral",
+      "rsi_1h": 70.47
+    },
+    {
+      "symbol": "AVAX",
+      "price": 9.02,
+      "signal_1h": "neutral",
+      "signal_4h": "neutral",
+      "rsi_1h": 60.77
+    },
+    {
+      "symbol": "DOT",
+      "price": 1.25,
+      "signal_1h": "sell",
+      "signal_4h": "neutral",
+      "rsi_1h": 53.98
+    },
+    {
+      "symbol": "LINK",
+      "price": 8.69,
+      "signal_1h": "neutral",
+      "signal_4h": "neutral",
+      "rsi_1h": 51.09
+    }
+  ]
+}

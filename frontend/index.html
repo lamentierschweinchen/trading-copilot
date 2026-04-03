@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Copilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Variables ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-0: #08080d;
+  --bg-1: #0e0e16;
+  --bg-2: #15151f;
+  --bg-3: #1c1c2a;
+  --border: #252538;
+  --border-subtle: #1a1a2a;
+  --text-0: #eaeaf0;
+  --text-1: #b0b0c0;
+  --text-2: #6b6b80;
+  --text-3: #45455a;
+  --accent: #e8a819;
+  --accent-dim: #e8a81930;
+  --long: #00d4aa;
+  --long-dim: #00d4aa18;
+  --short: #ff6b6b;
+  --short-dim: #ff6b6b18;
+  --invalidation: #ff2d55;
+  --invalidation-glow: #ff2d5540;
+  --neutral: #5b7bb4;
+  --neutral-dim: #5b7bb418;
+  --risk-on: #00d4aa;
+  --risk-off: #ff6b6b;
+  --risk-neutral: #e8a819;
+  --font-data: 'IBM Plex Mono', monospace;
+  --font-ui: 'Outfit', sans-serif;
+  --radius: 6px;
+  --radius-lg: 10px;
+}
+
+html { font-size: 14px; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg-0);
+  color: var(--text-0);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* ─── Layout Shell ─── */
+.shell {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  min-height: 100vh;
+}
+
+/* ─── Header ─── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-1);
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.logo {
+  font-family: var(--font-data);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.logo span { color: var(--accent); }
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--long);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+.status-dot.offline { background: var(--text-3); animation: none; }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.btn {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.3px;
+}
+.btn:hover { border-color: var(--text-3); color: var(--text-0); background: var(--bg-3); }
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg-0);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.btn-primary:hover { background: #f0b429; border-color: #f0b429; color: var(--bg-0); }
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-brief {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text-2);
+}
+.btn-brief:hover { border-color: var(--accent); color: var(--accent); }
+.symbol-input {
+  font-family: var(--font-data);
+  font-size: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  color: var(--text-0);
+  width: 220px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.symbol-input::placeholder { color: var(--text-3); }
+.symbol-input:focus { border-color: var(--accent); }
+
+/* ─── Macro Banner ─── */
+.macro-banner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--text-2);
+  overflow-x: auto;
+}
+.macro-banner.empty { justify-content: center; color: var(--text-3); font-family: var(--font-ui); }
+.macro-regime {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.macro-regime.risk_on { background: var(--long-dim); color: var(--long); border: 1px solid var(--long)30; }
+.macro-regime.risk_off { background: var(--short-dim); color: var(--short); border: 1px solid var(--short)30; }
+.macro-regime.neutral { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent)30; }
+.macro-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.macro-label { color: var(--text-3); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.macro-value { color: var(--text-1); }
+.macro-change { font-weight: 500; }
+.macro-change.up { color: var(--long); }
+.macro-change.down { color: var(--short); }
+.macro-fg { padding: 2px 8px; border-radius: 3px; font-weight: 600; }
+.macro-fg.fear { background: var(--short-dim); color: var(--short); }
+.macro-fg.greed { background: var(--long-dim); color: var(--long); }
+.macro-fg.neutral-fg { background: var(--accent-dim); color: var(--accent); }
+
+/* ─── Main Content ─── */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ─── Assets Panel ─── */
+.assets-panel {
+  padding: 20px 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 110px);
+}
+.panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 16px;
+}
+.assets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px;
+}
+.asset-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+.asset-card:hover { border-color: var(--border); }
+.asset-card.has-signal-buy { border-left: 2px solid var(--long); }
+.asset-card.has-signal-sell { border-left: 2px solid var(--short); }
+.asset-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.asset-symbol {
+  font-family: var(--font-data);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-0);
+}
+.asset-price {
+  font-family: var(--font-data);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-0);
+}
+.asset-change {
+  font-family: var(--font-data);
+  font-size: 12px;
+  margin-left: 6px;
+  font-weight: 500;
+}
+.asset-change.up { color: var(--long); }
+.asset-change.down { color: var(--short); }
+.asset-indicators {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.indicator {
+  background: var(--bg-2);
+  border-radius: 4px;
+  padding: 8px;
+}
+.indicator-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+.indicator-value {
+  font-family: var(--font-data);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-1);
+}
+.indicator-sub {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 2px;
+  font-family: var(--font-data);
+}
+.asset-signal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.signal-badge {
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 3px;
+}
+.signal-badge.strong_buy, .signal-badge.buy { background: var(--long-dim); color: var(--long); }
+.signal-badge.strong_sell, .signal-badge.sell { background: var(--short-dim); color: var(--short); }
+.signal-badge.neutral { background: var(--neutral-dim); color: var(--neutral); }
+.signal-strength {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--text-3);
+}
+.tf-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+.tf-label {
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: var(--font-data);
+  min-width: 24px;
+}
+.leverage-line {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+/* ─── Right Sidebar ─── */
+.sidebar {
+  border-left: 1px solid var(--border-subtle);
+  background: var(--bg-1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: calc(100vh - 110px);
+}
+
+/* ─── Recommendations ─── */
+.recs-section {
+  padding: 20px;
+  flex: 1;
+}
+.rec-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 10px;
+  position: relative;
+}
+.rec-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.rec-card.long::before { background: var(--long); }
+.rec-card.short::before { background: var(--short); }
+.rec-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.rec-symbol {
+  font-family: var(--font-data);
+  font-size: 18px;
+  font-weight: 700;
+}
+.rec-direction {
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 3px;
+}
+.rec-direction.long { background: var(--long-dim); color: var(--long); }
+.rec-direction.short { background: var(--short-dim); color: var(--short); }
+.rec-conviction {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.conviction-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-0);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.conviction-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+.conviction-fill.high { background: var(--long); }
+.conviction-fill.mid { background: var(--accent); }
+.conviction-fill.low { background: var(--short); }
+.conviction-label {
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* ─── INVALIDATION — THE STAR ─── */
+.rec-invalidation {
+  background: var(--bg-0);
+  border: 1px solid var(--invalidation);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  position: relative;
+  box-shadow: 0 0 20px var(--invalidation-glow), inset 0 0 20px var(--invalidation-glow);
+}
+.rec-invalidation::before {
+  content: 'INVALIDATION';
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--invalidation);
+  background: var(--bg-0);
+  padding: 0 6px;
+}
+.invalidation-price {
+  font-family: var(--font-data);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--invalidation);
+  text-shadow: 0 0 12px var(--invalidation-glow);
+}
+
+.rec-levels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.rec-level {
+  background: var(--bg-0);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+.rec-level-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 3px;
+}
+.rec-level-value {
+  font-family: var(--font-data);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-1);
+}
+.rec-rationale {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+.rec-macro-tag {
+  font-family: var(--font-data);
+  font-size: 10px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.rec-macro-tag .dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+}
+.rec-macro-tag .dot.aligned { background: var(--long); }
+.rec-macro-tag .dot.misaligned { background: var(--short); }
+
+/* ─── No Recs State ─── */
+.no-recs {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-3);
+}
+.no-recs-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+.no-recs-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 6px;
+}
+.no-recs-sub {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ─── Trades Section ─── */
+.trades-section {
+  padding: 20px;
+  border-top: 1px solid var(--border-subtle);
+}
+.trade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-family: var(--font-data);
+  font-size: 12px;
+  margin-bottom: 4px;
+  background: var(--bg-2);
+}
+.trade-row .sym { font-weight: 600; color: var(--text-0); }
+.trade-row .dir { text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+.trade-row .dir.long { color: var(--long); }
+.trade-row .dir.short { color: var(--short); }
+.trade-row .pnl { font-weight: 600; }
+.trade-row .pnl.win { color: var(--long); }
+.trade-row .pnl.loss { color: var(--short); }
+.trade-row .status { color: var(--text-3); font-size: 10px; }
+
+/* ─── Feedback Stats ─── */
+.feedback-section {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-2);
+}
+.feedback-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.feedback-stat {
+  text-align: center;
+}
+.feedback-stat-value {
+  font-family: var(--font-data);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-0);
+}
+.feedback-stat-label {
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* ─── Empty / Loading States ─── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  color: var(--text-3);
+  text-align: center;
+  padding: 40px;
+}
+.empty-state-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+.empty-state-sub {
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 300px;
+}
+.empty-state-sub kbd {
+  font-family: var(--font-data);
+  font-size: 11px;
+  padding: 2px 6px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--accent);
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Brief Modal ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal-overlay.visible { display: flex; }
+.modal {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 720px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: modal-in 0.2s ease;
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-0);
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text-0); }
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.brief-text {
+  font-family: var(--font-data);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-1);
+  white-space: pre-wrap;
+  background: var(--bg-0);
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
+}
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ─── Toast ─── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 12px;
+  color: var(--text-1);
+  z-index: 200;
+  animation: toast-in 0.2s ease, toast-out 0.2s ease 2.5s forwards;
+}
+@keyframes toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(10px); } }
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; }
+  .sidebar { border-left: none; border-top: 1px solid var(--border-subtle); max-height: none; }
+  .assets-panel { max-height: none; }
+  .assets-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">Trading <span>Copilot</span></div>
+      <div class="status-dot" id="statusDot"></div>
+    </div>
+    <div class="header-right">
+      <input type="text" class="symbol-input" id="symbolInput" placeholder="BTC,ETH,SOL (blank = all)" spellcheck="false">
+      <button class="btn btn-brief" id="briefBtn" title="Get prompt for Claude session">Copy Brief</button>
+      <button class="btn btn-primary" id="runBtn">Run Session</button>
+    </div>
+  </header>
+
+  <!-- Macro Banner -->
+  <div class="macro-banner empty" id="macroBanner">
+    Run a session to load market data
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Assets Grid -->
+    <div class="assets-panel" id="assetsPanel">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-state-title">No data yet</div>
+        <div class="empty-state-sub">
+          Enter symbols and click <kbd>Run Session</kbd> to fetch live market data and generate recommendations.
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="recs-section" id="recsSection">
+        <div class="panel-title">Recommendations</div>
+        <div class="no-recs" id="noRecs">
+          <div class="no-recs-icon">&#9678;</div>
+          <div class="no-recs-title">Waiting for session</div>
+          <div class="no-recs-sub">Recommendations appear here after running a session.</div>
+        </div>
+      </div>
+
+      <div class="trades-section" id="tradesSection" style="display:none">
+        <div class="panel-title">Trade Log</div>
+        <div id="tradesList"></div>
+      </div>
+
+      <div class="feedback-section" id="feedbackSection" style="display:none">
+        <div class="feedback-grid" id="feedbackGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Brief Modal -->
+<div class="modal-overlay" id="briefModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Session Brief — Ready to paste</div>
+      <button class="modal-close" id="briefClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="brief-text" id="briefText">Loading...</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="briefCancelBtn">Close</button>
+      <button class="btn btn-primary" id="briefCopyBtn">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+
+// ─── State ───
+let sessionData = null;
+let isRunning = false;
+
+// ─── DOM refs ───
+const $runBtn = document.getElementById('runBtn');
+const $briefBtn = document.getElementById('briefBtn');
+const $symbolInput = document.getElementById('symbolInput');
+const $macroBanner = document.getElementById('macroBanner');
+const $assetsPanel = document.getElementById('assetsPanel');
+const $emptyState = document.getElementById('emptyState');
+const $recsSection = document.getElementById('recsSection');
+const $noRecs = document.getElementById('noRecs');
+const $tradesSection = document.getElementById('tradesSection');
+const $tradesList = document.getElementById('tradesList');
+const $feedbackSection = document.getElementById('feedbackSection');
+const $feedbackGrid = document.getElementById('feedbackGrid');
+const $briefModal = document.getElementById('briefModal');
+const $briefText = document.getElementById('briefText');
+const $statusDot = document.getElementById('statusDot');
+
+// ─── Helpers ───
+function getSymbols() {
+  const val = $symbolInput.value.trim();
+  return val || null;
+}
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function formatPrice(p) {
+  if (p == null) return 'N/A';
+  if (p >= 1000) return '$' + p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (p >= 1) return '$' + p.toFixed(2);
+  return '$' + p.toFixed(4);
+}
+
+function formatPct(p) {
+  if (p == null) return 'N/A';
+  const sign = p >= 0 ? '+' : '';
+  return sign + p.toFixed(2) + '%';
+}
+
+function changeClass(val) {
+  if (val == null) return '';
+  return val >= 0 ? 'up' : 'down';
+}
+
+// ─── Render Macro Banner ───
+function renderMacro(macro) {
+  if (!macro) return;
+  const d = macro.data;
+  const regime = macro.regime;
+
+  let html = `<div class="macro-regime ${regime}">${regime.replace('_', ' ')}</div>`;
+
+  const items = [
+    { label: 'SPX', price: d.spx_price, change: d.spx_change_pct },
+    { label: 'QQQ', price: d.qqq_price, change: d.qqq_change_pct },
+    { label: 'DXY', price: d.dxy_price, change: d.dxy_change_pct },
+    { label: 'US10Y', price: d.us10y_yield, change: d.us10y_change_pct },
+  ];
+
+  for (const item of items) {
+    if (item.price != null) {
+      html += `
+        <div class="macro-item">
+          <span class="macro-label">${item.label}</span>
+          <span class="macro-value">${item.price.toFixed(2)}</span>
+          <span class="macro-change ${changeClass(item.change)}">${formatPct(item.change)}</span>
+        </div>`;
+    }
+  }
+
+  if (d.fear_greed_index != null) {
+    const fgClass = d.fear_greed_index <= 25 ? 'fear' : d.fear_greed_index >= 75 ? 'greed' : 'neutral-fg';
+    html += `
+      <div class="macro-item">
+        <span class="macro-label">F&G</span>
+        <span class="macro-fg ${fgClass}">${d.fear_greed_index} ${d.fear_greed_label || ''}</span>
+      </div>`;
+  }
+
+  $macroBanner.className = 'macro-banner';
+  $macroBanner.innerHTML = html;
+}
+
+// ─── Render Assets Grid ───
+function renderAssets(assets, leverage) {
+  if (!assets || assets.length === 0) return;
+
+  const levMap = {};
+  if (leverage) leverage.forEach(l => levMap[l.symbol] = l);
+
+  $emptyState.style.display = 'none';
+
+  // Keep only the panel title + cards
+  const existing = $assetsPanel.querySelector('.panel-title');
+  if (!existing) {
+    const title = document.createElement('div');
+    title.className = 'panel-title';
+    title.textContent = 'Assets';
+    $assetsPanel.prepend(title);
+  }
+
+  let gridEl = $assetsPanel.querySelector('.assets-grid');
+  if (!gridEl) {
+    gridEl = document.createElement('div');
+    gridEl.className = 'assets-grid';
+    $assetsPanel.appendChild(gridEl);
+  }
+
+  gridEl.innerHTML = assets.map(a => {
+    const tf = a.primary_tf;
+    const conf = a.confirmation_tf;
+    const lev = levMap[a.symbol];
+
+    const signalClass = (tf.signal === 'buy' || tf.signal === 'strong_buy') ? 'has-signal-buy'
+      : (tf.signal === 'sell' || tf.signal === 'strong_sell') ? 'has-signal-sell' : '';
+
+    return `
+    <div class="asset-card ${signalClass}">
+      <div class="asset-header">
+        <div>
+          <span class="asset-symbol">${a.symbol}</span>
+          <span class="asset-change ${changeClass(a.change_24h_pct)}">${formatPct(a.change_24h_pct)}</span>
+        </div>
+        <span class="asset-price">${formatPrice(a.price)}</span>
+      </div>
+      <div class="asset-indicators">
+        <div class="indicator">
+          <div class="indicator-label">MACD</div>
+          <div class="indicator-value">${tf.macd.crossover === 'none' ? (tf.macd.histogram > 0 ? '+ hist' : '- hist') : tf.macd.crossover}</div>
+          <div class="indicator-sub">${tf.macd.histogram.toFixed(4)}</div>
+        </div>
+        <div class="indicator">
+          <div class="indicator-label">Bollinger</div>
+          <div class="indicator-value">${tf.bollinger.position.replace('_', ' ')}</div>
+          <div class="indicator-sub">bw ${tf.bollinger.bandwidth.toFixed(4)}</div>
+        </div>
+        <div class="indicator">
+          <div class="indicator-label">RSI</div>
+          <div class="indicator-value">${tf.rsi.value.toFixed(1)}</div>
+          <div class="indicator-sub">${tf.rsi.condition}</div>
+        </div>
+      </div>
+      <div class="asset-signal">
+        <span class="signal-badge ${tf.signal}">${tf.signal.replace('_', ' ')}</span>
+        <span class="signal-strength">strength ${tf.signal_strength}</span>
+      </div>
+      ${conf ? `
+      <div class="tf-row">
+        <span class="tf-label">4h</span>
+        <span class="signal-badge ${conf.signal}" style="font-size:10px;padding:2px 6px">${conf.signal.replace('_', ' ')}</span>
+        <span class="signal-strength">RSI ${conf.rsi.value.toFixed(1)}</span>
+        <span class="signal-strength">MACD ${conf.macd.crossover}</span>
+      </div>` : ''}
+      ${lev ? `
+      <div class="leverage-line">${lev.positioning_summary || 'No leverage data'}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ─── Render Recommendations ───
+function renderRecs(recs) {
+  // Remove old cards
+  $recsSection.querySelectorAll('.rec-card').forEach(el => el.remove());
+
+  if (!recs || recs.length === 0) {
+    $noRecs.style.display = 'block';
+    $noRecs.querySelector('.no-recs-title').textContent = 'No setups found';
+    $noRecs.querySelector('.no-recs-sub').textContent = 'No assets met the confluence threshold this session. No trade is a valid outcome.';
+    return;
+  }
+
+  $noRecs.style.display = 'none';
+
+  for (const rec of recs) {
+    const convictionPct = (rec.conviction / 10) * 100;
+    const convictionClass = rec.conviction >= 7 ? 'high' : rec.conviction >= 5 ? 'mid' : 'low';
+
+    const card = document.createElement('div');
+    card.className = `rec-card ${rec.direction}`;
+    card.innerHTML = `
+      <div class="rec-top">
+        <span class="rec-symbol">${rec.symbol}</span>
+        <span class="rec-direction ${rec.direction}">${rec.leverage || ''} ${rec.direction}</span>
+      </div>
+      <div class="rec-conviction">
+        <div class="conviction-bar"><div class="conviction-fill ${convictionClass}" style="width:${convictionPct}%"></div></div>
+        <span class="conviction-label">${rec.conviction}/10</span>
+      </div>
+      <div class="rec-invalidation">
+        <div class="invalidation-price">${rec.invalidation}</div>
+      </div>
+      <div class="rec-levels">
+        <div class="rec-level">
+          <div class="rec-level-label">Entry Zone</div>
+          <div class="rec-level-value">${rec.entry_zone}</div>
+        </div>
+        <div class="rec-level">
+          <div class="rec-level-label">Target</div>
+          <div class="rec-level-value">${rec.target}</div>
+        </div>
+      </div>
+      <div class="rec-rationale">${rec.rationale}</div>
+      <div class="rec-macro-tag">
+        <span class="dot ${rec.macro_alignment ? 'aligned' : 'misaligned'}"></span>
+        ${rec.macro_alignment ? 'Macro aligned' : 'Against macro'}
+      </div>
+    `;
+    $recsSection.appendChild(card);
+  }
+}
+
+// ─── Render Trades ───
+function renderTrades(trades) {
+  if (!trades || trades.length === 0) {
+    $tradesSection.style.display = 'none';
+    return;
+  }
+  $tradesSection.style.display = 'block';
+  $tradesList.innerHTML = trades.slice(-10).reverse().map(t => {
+    const rec = t.recommendation;
+    const pnlClass = t.pnl_pct != null ? (t.pnl_pct > 0 ? 'win' : 'loss') : '';
+    const pnlStr = t.pnl_pct != null ? formatPct(t.pnl_pct) : '';
+    return `
+      <div class="trade-row">
+        <span class="sym">${rec.symbol}</span>
+        <span class="dir ${rec.direction}">${rec.direction}</span>
+        ${t.resolved ? `<span class="pnl ${pnlClass}">${pnlStr}</span>` : '<span class="status">open</span>'}
+      </div>`;
+  }).join('');
+}
+
+// ─── Render Feedback ───
+function renderFeedback(stats) {
+  if (!stats || stats.total_trades === 0) {
+    $feedbackSection.style.display = 'none';
+    return;
+  }
+  $feedbackSection.style.display = 'block';
+  const wr = stats.win_rate != null ? (stats.win_rate * 100).toFixed(0) + '%' : '--';
+  $feedbackGrid.innerHTML = `
+    <div class="feedback-stat">
+      <div class="feedback-stat-value">${stats.total_trades}</div>
+      <div class="feedback-stat-label">Total trades</div>
+    </div>
+    <div class="feedback-stat">
+      <div class="feedback-stat-value">${wr}</div>
+      <div class="feedback-stat-label">Win rate</div>
+    </div>
+    <div class="feedback-stat">
+      <div class="feedback-stat-value">${stats.best_asset || '--'}</div>
+      <div class="feedback-stat-label">Best asset</div>
+    </div>
+    <div class="feedback-stat">
+      <div class="feedback-stat-value">${stats.worst_asset || '--'}</div>
+      <div class="feedback-stat-label">Worst asset</div>
+    </div>
+  `;
+}
+
+// ─── Run Session ───
+async function runSession() {
+  if (isRunning) return;
+  isRunning = true;
+  $runBtn.disabled = true;
+  $runBtn.innerHTML = '<span class="loading-spinner"></span>';
+
+  const symbols = getSymbols();
+  const params = symbols ? `?symbols=${symbols}` : '';
+
+  try {
+    const res = await fetch(`${API}/session${params}`, { method: 'POST' });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    sessionData = await res.json();
+
+    renderMacro(sessionData.macro);
+    renderAssets(sessionData.assets, sessionData.leverage);
+    renderRecs(sessionData.recommendations);
+
+    // Load trades + feedback
+    const [tradesRes, feedbackRes] = await Promise.all([
+      fetch(`${API}/trades`).then(r => r.json()),
+      fetch(`${API}/feedback`).then(r => r.json()),
+    ]);
+    renderTrades(tradesRes);
+    renderFeedback(feedbackRes);
+
+    toast('Session complete');
+  } catch (err) {
+    toast('Error: ' + err.message);
+    console.error(err);
+  } finally {
+    isRunning = false;
+    $runBtn.disabled = false;
+    $runBtn.textContent = 'Run Session';
+  }
+}
+
+// ─── Brief ───
+async function fetchBrief() {
+  const symbols = getSymbols();
+  const params = symbols ? `?symbols=${symbols}` : '';
+  try {
+    const res = await fetch(`${API}/brief${params}`);
+    if (!res.ok) throw new Error(`${res.status}`);
+    return await res.text();
+  } catch (err) {
+    return 'Error fetching brief: ' + err.message;
+  }
+}
+
+async function showBrief() {
+  $briefModal.classList.add('visible');
+  $briefText.textContent = 'Loading...';
+  const text = await fetchBrief();
+  $briefText.textContent = text;
+}
+
+function closeBrief() {
+  $briefModal.classList.remove('visible');
+}
+
+async function copyBrief() {
+  const text = $briefText.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('Copied to clipboard');
+    closeBrief();
+  } catch {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    toast('Copied to clipboard');
+    closeBrief();
+  }
+}
+
+// ─── Health check ───
+async function checkHealth() {
+  try {
+    const res = await fetch(`${API}/health`);
+    $statusDot.classList.toggle('offline', !res.ok);
+  } catch {
+    $statusDot.classList.add('offline');
+  }
+}
+
+// ─── Event Listeners ───
+$runBtn.addEventListener('click', runSession);
+$briefBtn.addEventListener('click', showBrief);
+document.getElementById('briefClose').addEventListener('click', closeBrief);
+document.getElementById('briefCancelBtn').addEventListener('click', closeBrief);
+document.getElementById('briefCopyBtn').addEventListener('click', copyBrief);
+$briefModal.addEventListener('click', e => { if (e.target === $briefModal) closeBrief(); });
+$symbolInput.addEventListener('keydown', e => { if (e.key === 'Enter') runSession(); });
+
+// ─── Init ───
+checkHealth();
+setInterval(checkHealth, 30000);
+
+// Load existing trades on page load
+(async () => {
+  try {
+    const [tradesRes, feedbackRes] = await Promise.all([
+      fetch(`${API}/trades`).then(r => r.json()),
+      fetch(`${API}/feedback`).then(r => r.json()),
+    ]);
+    renderTrades(tradesRes);
+    renderFeedback(feedbackRes);
+  } catch {}
+})();
+</script>
+</body>
+</html>
