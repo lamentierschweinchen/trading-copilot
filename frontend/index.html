@@ -374,44 +374,56 @@ body {
 }
 .sentiment-gauge {
   flex: 1;
-  height: 6px;
-  background: var(--bg-0);
-  border-radius: 3px;
+  height: 8px;
+  background: var(--bg-3);
+  border-radius: 4px;
   position: relative;
   overflow: hidden;
+  border: 1px solid var(--border-subtle);
 }
 .sentiment-gauge-fill {
   position: absolute;
   top: 0;
   height: 100%;
-  border-radius: 3px;
   transition: width 0.4s ease;
+  min-width: 4px;
 }
-/* Bullish fills from left */
-.sentiment-gauge-fill.bullish {
+/* Bullish fills from center to right */
+.sentiment-gauge-fill.bullish,
+.sentiment-gauge-fill.bullish-weak {
   left: 50%;
-  background: var(--green);
+  background: linear-gradient(90deg, var(--green-soft), var(--green));
+  border-radius: 0 4px 4px 0;
+}
+.sentiment-gauge-fill.bullish-weak {
+  background: linear-gradient(90deg, var(--green-soft), var(--green-muted));
 }
 /* Bearish fills from center to left */
-.sentiment-gauge-fill.bearish {
+.sentiment-gauge-fill.bearish,
+.sentiment-gauge-fill.bearish-weak {
   right: 50%;
-  background: var(--red);
+  background: linear-gradient(270deg, var(--red-soft), var(--red));
+  border-radius: 4px 0 0 4px;
+}
+.sentiment-gauge-fill.bearish-weak {
+  background: linear-gradient(270deg, var(--red-soft), var(--red-muted));
 }
 /* Neutral - thin center mark */
 .sentiment-gauge-fill.s-neutral {
   left: 48%;
   width: 4% !important;
   background: var(--text-3);
+  border-radius: 4px;
 }
 .sentiment-gauge-center {
   position: absolute;
-  top: -1px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 2px;
-  height: 8px;
-  background: var(--text-3);
-  border-radius: 1px;
+  height: 100%;
+  background: var(--text-2);
+  z-index: 1;
 }
 .sentiment-word {
   font-family: var(--font-data);
@@ -429,7 +441,7 @@ body {
 /* ─── Indicators row — compact ─── */
 .asset-indicators {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 6px;
   margin-bottom: 10px;
 }
@@ -1241,6 +1253,20 @@ function atrDisplay(atr) {
   return atr.pct.toFixed(2) + '%';
 }
 
+function volumeSentiment(vol) {
+  if (!vol) return 'ind-neutral';
+  if (vol.trend === 'high') return 'bullish';
+  if (vol.trend === 'above_avg') return 'bullish-weak';
+  if (vol.trend === 'low') return 'bearish-weak';
+  return 'ind-neutral';
+}
+
+function volumeDisplay(vol) {
+  if (!vol) return 'N/A';
+  const label = vol.trend === 'high' ? 'High' : vol.trend === 'above_avg' ? 'Above avg' : vol.trend === 'low' ? 'Low' : 'Normal';
+  return vol.ratio.toFixed(1) + 'x ' + label;
+}
+
 let _sparklineId = 0;
 function buildSparkline(prices, isPositive) {
   if (!prices || prices.length < 2) return '';
@@ -1657,7 +1683,7 @@ function renderAssets(assets, leverage) {
         <span class="sentiment-label">Bias</span>
         <div class="sentiment-gauge">
           <div class="sentiment-gauge-center"></div>
-          <div class="sentiment-gauge-fill ${sent.cls}" style="width:${sent.pct / 2}%"></div>
+          <div class="sentiment-gauge-fill ${sent.cls}" style="width:${Math.max(sent.pct / 2, 6)}%"></div>
         </div>
         <span class="sentiment-word ${sent.cls}">${sent.label}</span>
       </div>
@@ -1682,6 +1708,10 @@ function renderAssets(assets, leverage) {
         <div class="indicator ${vwapSentiment(tf.vwap)}">
           <div class="indicator-top"><span class="indicator-label">VWAP</span></div>
           <div class="indicator-value ${vwapSentiment(tf.vwap)}">${vwapDisplay(tf.vwap)}</div>
+        </div>
+        <div class="indicator ${volumeSentiment(tf.volume)}">
+          <div class="indicator-top"><span class="indicator-label">Volume</span></div>
+          <div class="indicator-value ${volumeSentiment(tf.volume)}">${volumeDisplay(tf.volume)}</div>
         </div>
       </div>
       ${tfHtml}

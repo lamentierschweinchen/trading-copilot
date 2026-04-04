@@ -105,6 +105,13 @@ class VWAPResult(BaseModel):
     distance_pct: float   # percentage distance from VWAP
 
 
+class VolumeResult(BaseModel):
+    current: float           # current bar volume
+    avg_20: float            # 20-period average volume
+    ratio: float             # current / avg — >1.5 = high, <0.5 = low
+    trend: str               # "high", "above_avg", "normal", "low"
+
+
 class TechnicalSnapshot(BaseModel):
     symbol: str
     timeframe: str
@@ -114,6 +121,7 @@ class TechnicalSnapshot(BaseModel):
     rsi: RSIResult
     atr: ATRResult | None = None
     vwap: VWAPResult | None = None
+    volume: VolumeResult | None = None
     signal: Signal
     signal_strength: float = Field(ge=0, le=1)
 

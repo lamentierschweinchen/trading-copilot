@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from app.models.schemas import (
     Kline, MACDResult, BollingerResult, RSIResult,
-    ATRResult, VWAPResult,
+    ATRResult, VWAPResult, VolumeResult,
     TechnicalSnapshot, Signal,
 )
 
@@ -156,6 +156,31 @@ def compute_vwap(df: pd.DataFrame) -> VWAPResult:
     )
 
 
+def compute_volume(df: pd.DataFrame, period: int = 20) -> VolumeResult:
+    """Compute volume momentum: current bar vs 20-period average."""
+    vol = df["volume"]
+    avg = vol.rolling(window=period).mean().iloc[-1]
+    current = float(vol.iloc[-1])
+    avg_val = float(avg)
+    ratio = current / avg_val if avg_val > 0 else 1.0
+
+    if ratio >= 2.0:
+        trend = "high"
+    elif ratio >= 1.3:
+        trend = "above_avg"
+    elif ratio >= 0.7:
+        trend = "normal"
+    else:
+        trend = "low"
+
+    return VolumeResult(
+        current=round(current, 2),
+        avg_20=round(avg_val, 2),
+        ratio=round(ratio, 2),
+        trend=trend,
+    )
+
+
 def compute_signal(
     macd: MACDResult,
     bb: BollingerResult,
@@ -241,6 +266,12 @@ def analyze_klines(
     except Exception:
         logger.warning("VWAP computation failed for %s/%s", symbol, timeframe, exc_info=True)
 
+    vol = None
+    try:
+        vol = compute_volume(df)
+    except Exception:
+        logger.warning("Volume computation failed for %s/%s", symbol, timeframe, exc_info=True)
+
     return TechnicalSnapshot(
         symbol=symbol,
         timeframe=timeframe,
@@ -250,6 +281,7 @@ def analyze_klines(
         rsi=rsi,
         atr=atr,
         vwap=vwap,
+        volume=vol,
         signal=signal,
         signal_strength=strength,
     )

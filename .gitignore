@@ -5,3 +5,4 @@ __pycache__/
 data/trades.json
 .DS_Store
 *.egg-info/
+.vercel
