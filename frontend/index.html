@@ -301,7 +301,7 @@ body {
 .assets-grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
 }
 
 /* ─── Asset Card — Redesigned ─── */
@@ -1213,9 +1213,6 @@ body {
 .filter-btn.active, .sort-btn.active { border-color: var(--accent); color: var(--accent); }
 
 /* ─── Responsive ─── */
-@media (max-width: 1400px) {
-  .assets-grid { grid-template-columns: repeat(2, 1fr); }
-}
 @media (max-width: 900px) {
   .main { grid-template-columns: 1fr; }
   .sidebar { border-left: none; border-top: 1px solid var(--border-subtle); max-height: none; }
