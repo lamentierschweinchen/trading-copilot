@@ -730,6 +730,171 @@ body {
 .rec-macro-tag .dot.aligned { background: var(--green); }
 .rec-macro-tag .dot.misaligned { background: var(--red); }
 
+/* ─── Trade Scenarios ─── */
+.rec-scenarios {
+  margin: 12px 0;
+}
+.scenarios-toggle {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-2);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+.scenarios-toggle:hover { border-color: var(--text-3); color: var(--text-1); }
+.scenarios-grid {
+  display: none;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+.scenarios-grid.open { display: grid; }
+.scenario-card {
+  background: var(--bg-0);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 10px;
+  font-family: var(--font-data);
+  font-size: 11px;
+}
+.scenario-tier {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.scenario-card.conservative .scenario-tier { color: var(--green-muted); }
+.scenario-card.moderate .scenario-tier { color: var(--accent); }
+.scenario-card.aggressive .scenario-tier { color: var(--red); }
+.scenario-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+  color: var(--text-2);
+}
+.scenario-row .val { color: var(--text-0); font-weight: 500; }
+.scenario-rr {
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-subtle);
+  font-weight: 600;
+  text-align: center;
+}
+.scenario-rr.good { color: var(--green); }
+.scenario-rr.ok { color: var(--accent); }
+.scenario-rr.poor { color: var(--red); }
+
+/* ─── Conviction Breakdown ─── */
+.conviction-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.conv-factor {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-data);
+  font-size: 10px;
+  color: var(--text-2);
+  padding: 3px 6px;
+  background: var(--bg-0);
+  border-radius: 3px;
+}
+.conv-factor .conv-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.conv-dot.pos { background: var(--green); }
+.conv-dot.neg { background: var(--red); }
+.conv-dot.zero { background: var(--text-3); }
+
+/* ─── Price Levels on Asset Cards ─── */
+.price-levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.price-level-pill {
+  font-family: var(--font-data);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.price-level-pill.support { background: var(--green-dim); color: var(--green-muted); }
+.price-level-pill.resistance { background: var(--red-dim); color: var(--red-muted); }
+.price-level-pill.indicator-level { background: var(--neutral-blue-dim); color: var(--neutral-blue); }
+.price-level-pill .pl-label { font-weight: 600; }
+.price-level-pill .pl-price { font-weight: 400; }
+
+/* ─── Session History Timeline ─── */
+.history-section {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+.history-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 10px;
+}
+.history-timeline {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.history-node {
+  flex-shrink: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  min-width: 120px;
+  font-family: var(--font-data);
+  cursor: default;
+  transition: border-color 0.2s;
+}
+.history-node:hover { border-color: var(--border); }
+.history-node-time {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+.history-node-regime {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.history-node-regime.risk_on { color: var(--green); }
+.history-node-regime.risk_off { color: var(--red); }
+.history-node-regime.neutral { color: var(--accent); }
+.history-node-recs {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
 /* ─── No Recs State — Enhanced ─── */
 .no-recs {
   text-align: center;
@@ -1101,6 +1266,12 @@ body {
   <div class="heatmap-section" id="heatmapSection">
     <div class="heatmap-title">24H Performance</div>
     <div class="heatmap-grid" id="heatmapGrid"></div>
+  </div>
+
+  <!-- Session History Timeline -->
+  <div class="history-section" id="historySection" style="display:none">
+    <div class="history-title">Session History</div>
+    <div class="history-timeline" id="historyTimeline"></div>
   </div>
 
   <!-- Main Content -->
@@ -1714,6 +1885,16 @@ function renderAssets(assets, leverage) {
           <div class="indicator-value ${volumeSentiment(tf.volume)}">${volumeDisplay(tf.volume)}</div>
         </div>
       </div>
+      ${a.price_levels && a.price_levels.length > 0 ? `
+      <div class="price-levels">
+        ${a.price_levels.filter(l => {
+          const dist = Math.abs((l.price - a.price) / a.price);
+          return dist < 0.05;
+        }).slice(0, 6).map(l => {
+          const cls = l.level_type === 'support' ? 'support' : l.level_type === 'resistance' ? 'resistance' : 'indicator-level';
+          return `<span class="price-level-pill ${cls}"><span class="pl-label">${l.label}</span><span class="pl-price">${formatPrice(l.price)}</span></span>`;
+        }).join('')}
+      </div>` : ''}
       ${tfHtml}
       ${levHtml}
     </div>`;
@@ -1781,6 +1962,43 @@ function renderRecs(recs) {
     const convictionPct = (rec.conviction / 10) * 100;
     const convictionClass = rec.conviction >= 7 ? 'high' : rec.conviction >= 5 ? 'mid' : 'low';
 
+    // Conviction breakdown HTML
+    let breakdownHtml = '';
+    if (rec.conviction_breakdown) {
+      const cb = rec.conviction_breakdown;
+      const factors = [
+        ['MACD', cb.macd_score], ['BB', cb.bollinger_score], ['RSI', cb.rsi_score],
+        ['Vol', cb.volume_score], ['TF Align', cb.tf_alignment], ['Macro', cb.macro_score],
+      ];
+      breakdownHtml = `<div class="conviction-breakdown">${factors.map(([name, val]) =>
+        `<div class="conv-factor"><span class="conv-dot ${val > 0 ? 'pos' : val < 0 ? 'neg' : 'zero'}"></span>${name}</div>`
+      ).join('')}</div>`;
+    }
+
+    // Scenarios HTML
+    let scenariosHtml = '';
+    if (rec.scenarios && rec.scenarios.length > 0) {
+      const scenarioId = `scenarios-${rec.symbol}-${Date.now()}`;
+      scenariosHtml = `
+        <div class="rec-scenarios">
+          <button class="scenarios-toggle" onclick="document.getElementById('${scenarioId}').classList.toggle('open');this.textContent=this.textContent.includes('Show')?'Hide Scenarios':'Show Scenarios'">Show Scenarios</button>
+          <div class="scenarios-grid" id="${scenarioId}">
+            ${rec.scenarios.map(s => {
+              const rrClass = s.risk_reward >= 3 ? 'good' : s.risk_reward >= 2 ? 'ok' : 'poor';
+              return `
+              <div class="scenario-card ${s.tier}">
+                <div class="scenario-tier">${s.tier} ${s.leverage}</div>
+                <div class="scenario-row"><span>Entry</span><span class="val">${s.entry}</span></div>
+                <div class="scenario-row"><span>Target</span><span class="val">${s.target}</span></div>
+                <div class="scenario-row"><span>Stop</span><span class="val">${s.stop_loss}</span></div>
+                <div class="scenario-row"><span>Size</span><span class="val">${s.position_size_pct}%</span></div>
+                <div class="scenario-rr ${rrClass}">${s.risk_reward}R</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
     const card = document.createElement('div');
     card.className = `rec-card ${rec.direction}`;
     card.innerHTML = `
@@ -1792,6 +2010,7 @@ function renderRecs(recs) {
         <div class="conviction-bar"><div class="conviction-fill ${convictionClass}" style="width:${convictionPct}%"></div></div>
         <span class="conviction-label">${rec.conviction}/10</span>
       </div>
+      ${breakdownHtml}
       <div class="rec-invalidation">
         <div class="invalidation-price">${rec.invalidation}</div>
       </div>
@@ -1805,6 +2024,7 @@ function renderRecs(recs) {
           <div class="rec-level-value">${rec.target}</div>
         </div>
       </div>
+      ${scenariosHtml}
       <div class="rec-rationale">${rec.rationale}</div>
       <div class="rec-macro-tag">
         <span class="dot ${rec.macro_alignment ? 'aligned' : 'misaligned'}"></span>
@@ -1884,12 +2104,14 @@ async function runSession() {
     renderAssets(sessionData.assets, sessionData.leverage);
     renderRecs(sessionData.recommendations);
 
-    const [tradesRes, feedbackRes] = await Promise.all([
+    const [tradesRes, feedbackRes, sessionsRes] = await Promise.all([
       fetch(`${API}/trades`).then(r => r.json()),
       fetch(`${API}/feedback`).then(r => r.json()),
+      fetch(`${API}/sessions`).then(r => r.json()).catch(() => []),
     ]);
     renderTrades(tradesRes);
     renderFeedback(feedbackRes);
+    renderSessionHistory(sessionsRes);
 
     toast('Session complete');
   } catch (err) {
@@ -1900,6 +2122,26 @@ async function runSession() {
     $runBtn.disabled = false;
     $runBtn.textContent = 'Run Session';
   }
+}
+
+// ─── Session History Timeline ───
+function renderSessionHistory(sessions) {
+  const $section = document.getElementById('historySection');
+  const $timeline = document.getElementById('historyTimeline');
+  if (!sessions || sessions.length === 0) { $section.style.display = 'none'; return; }
+  $section.style.display = 'block';
+  $timeline.innerHTML = sessions.map(s => {
+    const dt = new Date(s.timestamp);
+    const timeStr = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateStr = dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const regime = s.regime || 'neutral';
+    return `
+      <div class="history-node">
+        <div class="history-node-time">${dateStr} ${timeStr}</div>
+        <div class="history-node-regime ${regime}">${regime.replace('_', ' ')}</div>
+        <div class="history-node-recs">${s.rec_count || 0} rec${s.rec_count !== 1 ? 's' : ''}</div>
+      </div>`;
+  }).join('');
 }
 
 // ─── Brief ───

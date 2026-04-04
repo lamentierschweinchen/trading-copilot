@@ -22,7 +22,8 @@ from app.feedback.loop import (
     get_all_trades,
     compute_feedback_stats,
 )
-from app.models.schemas import SessionBrief, TradeLog, FeedbackStats
+from app.models.schemas import SessionBrief, TradeLog, FeedbackStats, SessionSummary
+from app.db import log_session, get_sessions
 from fastapi.responses import PlainTextResponse
 
 
@@ -151,6 +152,19 @@ async def run_session(symbols: str = Query(default=None)):
         feedback_summary=feedback.summary if feedback.total_trades > 0 else None,
     )
 
+    # Log session to database
+    import json
+    try:
+        assets_json = json.dumps([{"symbol": a.symbol} for a in assets])
+        log_session(
+            regime=macro.regime.value,
+            confidence=macro.confidence,
+            rec_count=len(recommendations),
+            assets_json=assets_json,
+        )
+    except Exception as e:
+        logger.warning("Failed to log session: %s", e)
+
     return brief.model_dump()
 
 
@@ -265,6 +279,12 @@ Key rules:
 What setups do you see? Be specific with price levels."""
 
     return brief
+
+
+@app.get("/sessions")
+async def list_sessions(limit: int = Query(default=20, le=100)):
+    """Get session history for timeline."""
+    return get_sessions(limit)
 
 
 # --- Serve frontend as static files (must be last) ---

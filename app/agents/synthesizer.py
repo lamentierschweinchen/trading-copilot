@@ -216,6 +216,50 @@ Note: {feedback.summary}""")
     return "\n\n".join(sections)
 
 
+def _build_scenarios(price: float, is_long: bool, tf, conviction: int) -> list:
+    """Build conservative/moderate/aggressive trade scenarios."""
+    from app.models.schemas import TradeScenario
+
+    atr_pct = tf.atr.pct / 100 if tf.atr else 0.02  # fallback 2%
+    bb = tf.bollinger
+
+    scenarios = []
+    tiers = [
+        ("conservative", 0.6, "3x", 5),   # tighter target, wider stop, smaller size
+        ("moderate",      1.0, "5x", 10),
+        ("aggressive",    1.5, "10x", 15),
+    ]
+
+    for tier_name, multiplier, leverage, size_pct in tiers:
+        target_dist = atr_pct * 3 * multiplier  # 3 ATR scaled
+        stop_dist = atr_pct * 1.5 / multiplier  # tighter stop for aggressive
+
+        if is_long:
+            entry = price * (1 - atr_pct * 0.3)
+            target = price * (1 + target_dist)
+            stop = price * (1 - stop_dist)
+        else:
+            entry = price * (1 + atr_pct * 0.3)
+            target = price * (1 - target_dist)
+            stop = price * (1 + stop_dist)
+
+        risk = abs(entry - stop)
+        reward = abs(target - entry)
+        rr = round(reward / risk, 2) if risk > 0 else 0
+
+        scenarios.append(TradeScenario(
+            tier=tier_name,
+            leverage=leverage,
+            entry=f"${entry:,.2f}",
+            target=f"${target:,.2f}",
+            stop_loss=f"${stop:,.2f}",
+            risk_reward=rr,
+            position_size_pct=size_pct,
+        ))
+
+    return scenarios
+
+
 def _conviction_to_leverage(conviction: int) -> str:
     """Map conviction score to leverage multiplier."""
     if conviction <= 5:
@@ -378,6 +422,39 @@ def _run_local(
         if not macro_aligned:
             rationale += f" Caution: against {macro.regime.value} macro."
 
+        # --- Build conviction breakdown ---
+        from app.models.schemas import ConvictionBreakdown, TradeScenario
+
+        macd_s = 1.0 if tf.macd.crossover == ("bullish" if is_long else "bearish") else (
+            0.5 if (is_long and tf.macd.histogram > 0) or (not is_long and tf.macd.histogram < 0) else
+            -0.5 if (is_long and tf.macd.histogram < 0) or (not is_long and tf.macd.histogram > 0) else 0
+        )
+        bb_s = 1.0 if tf.bollinger.position == ("below_lower" if is_long else "above_upper") else (
+            0.5 if tf.bollinger.position == ("lower_half" if is_long else "upper_half") else -0.5
+        )
+        rsi_s = 1.0 if tf.rsi.condition == ("oversold" if is_long else "overbought") else (
+            -1.0 if tf.rsi.condition == ("overbought" if is_long else "oversold") else 0
+        )
+        vol_s = 0
+        if tf.volume:
+            vol_s = 0.5 if tf.volume.trend in ("high", "above_avg") else (-0.5 if tf.volume.trend == "low" else 0)
+        tf_a = 0
+        if conf:
+            conf_agrees = (is_long and conf.signal.value in ("strong_buy", "buy")) or (
+                not is_long and conf.signal.value in ("strong_sell", "sell"))
+            tf_a = 1.0 if conf_agrees else 0.5
+        macro_s = 1.0 if macro_aligned and macro.regime != Regime.NEUTRAL else (
+            -1.0 if not macro_aligned else 0
+        )
+        breakdown = ConvictionBreakdown(
+            macd_score=macd_s, bollinger_score=bb_s, rsi_score=rsi_s,
+            volume_score=vol_s, tf_alignment=tf_a, macro_score=macro_s,
+            total=macd_s + bb_s + rsi_s + vol_s + tf_a + macro_s,
+        )
+
+        # --- Build 3 trade scenarios ---
+        scenarios = _build_scenarios(price, is_long, tf, conviction)
+
         candidates.append(TradeRecommendation(
             symbol=asset.symbol,
             direction=direction,
@@ -388,6 +465,8 @@ def _run_local(
             invalidation=f"${invalidation:,.2f}",
             rationale=rationale,
             macro_alignment=macro_aligned,
+            scenarios=scenarios,
+            conviction_breakdown=breakdown,
         ))
 
     # Sort by conviction descending, cap at 3

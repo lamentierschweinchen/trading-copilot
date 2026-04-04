@@ -141,9 +141,10 @@ class AssetIntel(BaseModel):
     change_24h_pct: float | None = None
     volume_24h: float | None = None
     sparkline_24h: list[float] | None = None
-    scalp_tf: TechnicalSnapshot | None = None       # 15m
-    primary_tf: TechnicalSnapshot                     # 1h
-    confirmation_tf: TechnicalSnapshot | None = None  # 4h
+    price_levels: list[PriceLevel] | None = None      # key S/R levels
+    scalp_tf: TechnicalSnapshot | None = None          # 15m
+    primary_tf: TechnicalSnapshot                      # 1h
+    confirmation_tf: TechnicalSnapshot | None = None   # 4h
 
 
 class LeverageContext(BaseModel):
@@ -157,6 +158,36 @@ class LeverageContext(BaseModel):
 
 # --- Synthesizer output ---
 
+class TradeScenario(BaseModel):
+    """Conservative / Moderate / Aggressive tier for a trade."""
+    tier: str                  # "conservative", "moderate", "aggressive"
+    leverage: str              # e.g. "3x", "5x", "10x"
+    entry: str                 # entry price or zone
+    target: str                # take-profit level
+    stop_loss: str             # stop-loss level
+    risk_reward: float         # R:R ratio
+    position_size_pct: float   # suggested % of portfolio
+
+
+class ConvictionBreakdown(BaseModel):
+    """What contributed to the recommendation's conviction score."""
+    macd_score: float = 0       # -1 to +1
+    bollinger_score: float = 0  # -1 to +1
+    rsi_score: float = 0       # -1 to +1
+    volume_score: float = 0    # -1 to +1
+    tf_alignment: float = 0   # 0 to +1 (multi-timeframe agreement)
+    macro_score: float = 0    # -1 to +1
+    total: float = 0
+
+
+class PriceLevel(BaseModel):
+    """Key price level for an asset (support/resistance/alert)."""
+    label: str                 # "Support 1", "Resistance 1", "BB Upper", etc.
+    price: float
+    level_type: str            # "support", "resistance", "indicator"
+    source: str                # "bollinger", "vwap", "atr", "round_number"
+
+
 class TradeRecommendation(BaseModel):
     symbol: str
     direction: Direction
@@ -167,6 +198,8 @@ class TradeRecommendation(BaseModel):
     invalidation: str  # THE most important field
     rationale: str
     macro_alignment: bool
+    scenarios: list[TradeScenario] | None = None
+    conviction_breakdown: ConvictionBreakdown | None = None
     expires_after_hours: int = 12  # auto-expire if not entered
     timestamp: datetime = Field(default_factory=datetime.now)
 
@@ -178,6 +211,16 @@ class SessionBrief(BaseModel):
     recommendations: list[TradeRecommendation]
     feedback_summary: str | None = None
     generated_at: datetime = Field(default_factory=datetime.now)
+
+
+class SessionSummary(BaseModel):
+    """Lightweight summary for session history timeline."""
+    id: int
+    timestamp: str
+    regime: str | None = None
+    confidence: float | None = None
+    rec_count: int = 0
+    symbols: list[str] | None = None
 
 
 # --- Feedback loop ---
