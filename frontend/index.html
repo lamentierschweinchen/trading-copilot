@@ -300,8 +300,8 @@ body {
 }
 .assets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
 }
 
 /* ─── Asset Card — Redesigned ─── */
@@ -314,8 +314,8 @@ body {
   position: relative;
 }
 .asset-card:hover { border-color: var(--border); }
-.asset-card.has-signal-buy { border-left: 3px solid var(--green); }
-.asset-card.has-signal-sell { border-left: 3px solid var(--red); }
+.asset-card.has-signal-buy { border-left: 2px solid var(--green); }
+.asset-card.has-signal-sell { border-left: 2px solid var(--red); }
 /* Glow effect for cards with signals */
 .asset-card.has-signal-buy { box-shadow: inset 0 0 30px var(--green-dim); }
 .asset-card.has-signal-sell { box-shadow: inset 0 0 30px var(--red-dim); }
@@ -429,21 +429,26 @@ body {
 /* ─── Indicators row — compact ─── */
 .asset-indicators {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(5, 1fr);
   gap: 6px;
   margin-bottom: 10px;
+}
+.asset-volume {
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--text-3);
 }
 .indicator {
   background: var(--bg-2);
   border-radius: 4px;
   padding: 6px 8px;
   border-left: 3px solid transparent;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.2s;
 }
-.indicator.bullish { border-left-color: var(--green); }
-.indicator.bullish-weak { border-left-color: var(--green-muted); }
-.indicator.bearish { border-left-color: var(--red); }
-.indicator.bearish-weak { border-left-color: var(--red-muted); }
+.indicator.bullish { border-left-color: var(--green); background: var(--green-dim); }
+.indicator.bullish-weak { border-left-color: var(--green-muted); background: var(--green-dim); }
+.indicator.bearish { border-left-color: var(--red); background: var(--red-dim); }
+.indicator.bearish-weak { border-left-color: var(--red-muted); background: var(--red-dim); }
 .indicator.ind-neutral { border-left-color: var(--text-3); }
 .indicator-top {
   display: flex;
@@ -952,13 +957,55 @@ body {
 @keyframes toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes toast-out { to { opacity: 0; transform: translateY(10px); } }
 
+/* ─── Asset Controls (Sort/Filter) ─── */
+.asset-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.control-sep {
+  color: var(--text-3);
+  font-size: 12px;
+  margin: 0 4px;
+}
+.filter-btn, .sort-btn {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-2);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.3px;
+}
+.filter-btn:hover, .sort-btn:hover { border-color: var(--text-3); color: var(--text-1); }
+.filter-btn.active, .sort-btn.active { border-color: var(--accent); color: var(--accent); }
+
 /* ─── Responsive ─── */
+@media (max-width: 1400px) {
+  .assets-grid { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 900px) {
   .main { grid-template-columns: 1fr; }
   .sidebar { border-left: none; border-top: 1px solid var(--border-subtle); max-height: none; }
   .assets-panel { max-height: none; }
   .assets-grid { grid-template-columns: 1fr; }
+  .asset-indicators { grid-template-columns: repeat(3, 1fr); }
   .market-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .asset-indicators { display: none; }
+  .leverage-row { display: none; }
+  .tf-row { display: none; }
+  .asset-card.expanded .asset-indicators,
+  .asset-card.expanded .leverage-row,
+  .asset-card.expanded .tf-row { display: flex; }
+  .asset-card.expanded .asset-indicators { display: grid; }
 }
 </style>
 </head>
@@ -1111,6 +1158,32 @@ function formatOI(oi) {
 function formatFunding(rate) {
   if (rate == null) return 'N/A';
   return (rate * 100).toFixed(4) + '%';
+}
+
+function formatVolume(v) {
+  if (v == null) return '';
+  if (v >= 1e9) return '$' + (v / 1e9).toFixed(1) + 'B';
+  if (v >= 1e6) return '$' + (v / 1e6).toFixed(1) + 'M';
+  if (v >= 1e3) return '$' + (v / 1e3).toFixed(0) + 'K';
+  return '$' + v.toFixed(0);
+}
+
+function vwapSentiment(vwap) {
+  if (!vwap) return 'ind-neutral';
+  if (vwap.price_vs_vwap === 'above') return 'bullish';
+  if (vwap.price_vs_vwap === 'below') return 'bearish';
+  return 'ind-neutral';
+}
+
+function vwapDisplay(vwap) {
+  if (!vwap) return 'N/A';
+  const pos = vwap.price_vs_vwap === 'above' ? 'Above' : vwap.price_vs_vwap === 'below' ? 'Below' : 'At';
+  return pos + ' ' + Math.abs(vwap.distance_pct).toFixed(2) + '%';
+}
+
+function atrDisplay(atr) {
+  if (!atr) return 'N/A';
+  return atr.pct.toFixed(2) + '%';
 }
 
 // ─── Indicator sentiment classifiers ───
@@ -1323,8 +1396,16 @@ function renderMarketOverview(macro) {
 }
 
 // ─── Render Assets Grid ───
+let currentFilter = 'all';
+let currentSort = 'default';
+let lastAssets = null;
+let lastLeverage = null;
+
 function renderAssets(assets, leverage) {
   if (!assets || assets.length === 0) return;
+
+  lastAssets = assets;
+  lastLeverage = leverage;
 
   const levMap = {};
   if (leverage) leverage.forEach(l => levMap[l.symbol] = l);
@@ -1339,6 +1420,23 @@ function renderAssets(assets, leverage) {
     $assetsPanel.prepend(title);
   }
 
+  // Build controls if not present
+  let controlsEl = $assetsPanel.querySelector('.asset-controls');
+  if (!controlsEl) {
+    controlsEl = document.createElement('div');
+    controlsEl.className = 'asset-controls';
+    controlsEl.innerHTML = `
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+      <button class="filter-btn" data-filter="signals-first" onclick="setFilter('signals-first')">Signals First</button>
+      <span class="control-sep">|</span>
+      <button class="sort-btn active" data-sort="default" onclick="setSort('default')">Default</button>
+      <button class="sort-btn" data-sort="rsi" onclick="setSort('rsi')">RSI</button>
+      <button class="sort-btn" data-sort="change" onclick="setSort('change')">24h Change</button>
+      <button class="sort-btn" data-sort="strength" onclick="setSort('strength')">Signal Strength</button>
+    `;
+    $assetsPanel.insertBefore(controlsEl, $assetsPanel.querySelector('.panel-title')?.nextSibling || $assetsPanel.firstChild);
+  }
+
   let gridEl = $assetsPanel.querySelector('.assets-grid');
   if (!gridEl) {
     gridEl = document.createElement('div');
@@ -1346,11 +1444,24 @@ function renderAssets(assets, leverage) {
     $assetsPanel.appendChild(gridEl);
   }
 
-  // Keep original order (config defines assets by market cap: BTC, ETH, SOL, ...)
-  const scored = assets.map(a => {
+  let scored = assets.map(a => {
     const sent = computeSentiment(a.primary_tf, a.confirmation_tf, a.scalp_tf);
     return { asset: a, sent };
   });
+
+  // Apply sort
+  if (currentSort === 'rsi') scored.sort((a, b) => a.asset.primary_tf.rsi.value - b.asset.primary_tf.rsi.value);
+  else if (currentSort === 'change') scored.sort((a, b) => (b.asset.change_24h_pct || 0) - (a.asset.change_24h_pct || 0));
+  else if (currentSort === 'strength') scored.sort((a, b) => b.asset.primary_tf.signal_strength - a.asset.primary_tf.signal_strength);
+
+  // "Signals First" — sort signal assets to top, then neutrals
+  if (currentFilter === 'signals-first') {
+    scored.sort((a, b) => {
+      const aSig = ['buy','strong_buy','sell','strong_sell'].includes(a.asset.primary_tf.signal) ? 1 : 0;
+      const bSig = ['buy','strong_buy','sell','strong_sell'].includes(b.asset.primary_tf.signal) ? 1 : 0;
+      return bSig - aSig;
+    });
+  }
 
   gridEl.innerHTML = scored.map(({ asset: a, sent }) => {
     const tf = a.primary_tf;
@@ -1416,11 +1527,12 @@ function renderAssets(assets, leverage) {
     }
 
     return `
-    <div class="asset-card ${signalClass}">
+    <div class="asset-card expanded ${signalClass}" onclick="this.classList.toggle('expanded')">
       <div class="asset-header">
         <div class="asset-header-left">
           <span class="asset-symbol">${a.symbol}</span>
           <span class="asset-change ${changeClass(a.change_24h_pct)}">${formatPct(a.change_24h_pct)}</span>
+          ${a.volume_24h ? `<span class="asset-volume">${formatVolume(a.volume_24h)}</span>` : ''}
         </div>
         <span class="asset-price">${formatPrice(a.price)}</span>
       </div>
@@ -1436,28 +1548,42 @@ function renderAssets(assets, leverage) {
 
       <div class="asset-indicators">
         <div class="indicator ${mSent}">
-          <div class="indicator-top">
-            <span class="indicator-label">MACD</span>
-          </div>
+          <div class="indicator-top"><span class="indicator-label">MACD</span></div>
           <div class="indicator-value ${mSent}">${macdDisplay(tf.macd)}</div>
         </div>
         <div class="indicator ${bSent}">
-          <div class="indicator-top">
-            <span class="indicator-label">Bollinger</span>
-          </div>
+          <div class="indicator-top"><span class="indicator-label">Bollinger</span></div>
           <div class="indicator-value ${bSent}">${bbDisplay(tf.bollinger)}</div>
         </div>
         <div class="indicator ${rSent}">
-          <div class="indicator-top">
-            <span class="indicator-label">RSI</span>
-          </div>
+          <div class="indicator-top"><span class="indicator-label">RSI</span></div>
           <div class="indicator-value ${rSent}">${tf.rsi.value.toFixed(0)} <span style="font-size:10px;font-weight:400;color:var(--text-3)">${rsiLabel(tf.rsi)}</span></div>
+        </div>
+        <div class="indicator ind-neutral">
+          <div class="indicator-top"><span class="indicator-label">ATR</span></div>
+          <div class="indicator-value" style="color:var(--text-1)">${atrDisplay(tf.atr)}</div>
+        </div>
+        <div class="indicator ${vwapSentiment(tf.vwap)}">
+          <div class="indicator-top"><span class="indicator-label">VWAP</span></div>
+          <div class="indicator-value ${vwapSentiment(tf.vwap)}">${vwapDisplay(tf.vwap)}</div>
         </div>
       </div>
       ${tfHtml}
       ${levHtml}
     </div>`;
   }).join('');
+}
+
+function setFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+  renderAssets(lastAssets, lastLeverage);
+}
+
+function setSort(sort) {
+  currentSort = sort;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === sort));
+  renderAssets(lastAssets, lastLeverage);
 }
 
 // ─── Render Recommendations ───
