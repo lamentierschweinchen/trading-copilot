@@ -93,6 +93,18 @@ class RSIResult(BaseModel):
     condition: str  # "overbought", "neutral", "oversold"
 
 
+class ATRResult(BaseModel):
+    value: float     # absolute ATR value
+    pct: float       # ATR as percentage of current price
+    period: int = 14
+
+
+class VWAPResult(BaseModel):
+    value: float
+    price_vs_vwap: str    # "above", "below", "at"
+    distance_pct: float   # percentage distance from VWAP
+
+
 class TechnicalSnapshot(BaseModel):
     symbol: str
     timeframe: str
@@ -100,6 +112,8 @@ class TechnicalSnapshot(BaseModel):
     macd: MACDResult
     bollinger: BollingerResult
     rsi: RSIResult
+    atr: ATRResult | None = None
+    vwap: VWAPResult | None = None
     signal: Signal
     signal_strength: float = Field(ge=0, le=1)
 
@@ -118,6 +132,7 @@ class AssetIntel(BaseModel):
     price: float
     change_24h_pct: float | None = None
     volume_24h: float | None = None
+    sparkline_24h: list[float] | None = None
     scalp_tf: TechnicalSnapshot | None = None       # 15m
     primary_tf: TechnicalSnapshot                     # 1h
     confirmation_tf: TechnicalSnapshot | None = None  # 4h

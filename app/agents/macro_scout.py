@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 
-from app.services.yahoo import fetch_macro_data
+from app.services.finnhub import fetch_macro_data
 from app.services.fear_greed import fetch_fear_greed
 from app.models.schemas import MacroSnapshot, MacroVerdict, Regime
 
@@ -12,9 +12,8 @@ async def run() -> MacroVerdict:
     Fetches macro indicators, determines the current risk regime.
     Runs once per session — macro doesn't change on 1h candles.
     """
-    # yfinance is sync, run in thread; fear_greed is async
-    loop = asyncio.get_event_loop()
-    macro_task = loop.run_in_executor(None, fetch_macro_data)
+    # Both are async now
+    macro_task = fetch_macro_data()
     fg_task = fetch_fear_greed()
 
     macro_data, fg_data = await asyncio.gather(macro_task, fg_task)

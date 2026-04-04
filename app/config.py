@@ -4,6 +4,7 @@ from typing import ClassVar
 
 class Settings(BaseSettings):
     anthropic_api_key: str = ""
+    finnhub_api_key: str = ""
     mock_synthesizer: bool = True  # set to False to use Claude API
 
     # Assets: Binance symbol mapping
@@ -26,15 +27,15 @@ class Settings(BaseSettings):
     CONFIRMATION_TIMEFRAME: ClassVar[str] = "4h"
     KLINE_LIMIT: ClassVar[int] = 200  # enough for indicator computation
 
-    # Macro tickers for yfinance
+    # Macro tickers for Finnhub (ETF proxies)
     MACRO_TICKERS: ClassVar[dict[str, str]] = {
-        "SPX": "^GSPC",
+        "SPX": "SPY",
         "QQQ": "QQQ",
-        "DXY": "DX-Y.NYB",
-        "US10Y": "^TNX",
-        "DOW": "^DJI",
-        "GOLD": "GC=F",
-        "VIX": "^VIX",
+        "DXY": "UUP",
+        "US10Y": "TLT",
+        "DOW": "DIA",
+        "GOLD": "GLD",
+        "VIX": "VIXY",
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

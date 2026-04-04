@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from app.models.schemas import (
     Kline, MACDResult, BollingerResult, RSIResult,
+    ATRResult, VWAPResult,
     TechnicalSnapshot, Signal,
 )
 
@@ -111,6 +112,49 @@ def compute_rsi(df: pd.DataFrame, period: int = 14) -> RSIResult:
     return RSIResult(value=round(rsi_val, 2), condition=condition)
 
 
+def compute_atr(df: pd.DataFrame, period: int = 14) -> ATRResult:
+    """Compute Average True Range."""
+    high = df["high"]
+    low = df["low"]
+    close = df["close"]
+    prev_close = close.shift(1)
+
+    tr = pd.concat([
+        high - low,
+        (high - prev_close).abs(),
+        (low - prev_close).abs(),
+    ], axis=1).max(axis=1)
+
+    atr = tr.rolling(window=period).mean().iloc[-1]
+    price = float(close.iloc[-1])
+    pct = (float(atr) / price) * 100 if price != 0 else 0.0
+
+    return ATRResult(
+        value=round(float(atr), 4),
+        pct=round(pct, 4),
+        period=period,
+    )
+
+
+def compute_vwap(df: pd.DataFrame) -> VWAPResult:
+    """Compute Volume Weighted Average Price."""
+    typical_price = (df["high"] + df["low"] + df["close"]) / 3
+    cum_tp_vol = (typical_price * df["volume"]).cumsum()
+    cum_vol = df["volume"].cumsum()
+    vwap = cum_tp_vol / cum_vol
+    vwap_val = float(vwap.iloc[-1])
+    price = float(df["close"].iloc[-1])
+
+    distance_pct = ((price - vwap_val) / vwap_val) * 100 if vwap_val != 0 else 0.0
+    position = "above" if price > vwap_val * 1.001 else "below" if price < vwap_val * 0.999 else "at"
+
+    return VWAPResult(
+        value=round(vwap_val, 4),
+        price_vs_vwap=position,
+        distance_pct=round(distance_pct, 4),
+    )
+
+
 def compute_signal(
     macd: MACDResult,
     bb: BollingerResult,
@@ -183,6 +227,18 @@ def analyze_klines(
     rsi = compute_rsi(df)
     signal, strength = compute_signal(macd, bb, rsi)
 
+    # ATR & VWAP — graceful failure
+    atr = None
+    vwap = None
+    try:
+        atr = compute_atr(df)
+    except Exception:
+        pass
+    try:
+        vwap = compute_vwap(df)
+    except Exception:
+        pass
+
     return TechnicalSnapshot(
         symbol=symbol,
         timeframe=timeframe,
@@ -190,6 +246,8 @@ def analyze_klines(
         macd=macd,
         bollinger=bb,
         rsi=rsi,
+        atr=atr,
+        vwap=vwap,
         signal=signal,
         signal_strength=strength,
     )

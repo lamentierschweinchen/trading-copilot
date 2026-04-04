@@ -55,11 +55,17 @@ async def _analyze_asset(symbol: str) -> AssetIntel:
         change_24h = float(ticker.get("priceChangePercent", 0))
         volume_24h = float(ticker.get("quoteVolume", 0))
 
+    # Extract last 24 close prices for sparkline (1h candles = 24h)
+    sparkline = None
+    if primary_klines and len(primary_klines) >= 24:
+        sparkline = [float(k.close) for k in primary_klines[-24:]]
+
     return AssetIntel(
         symbol=symbol,
         price=primary_tf.price,
         change_24h_pct=change_24h,
         volume_24h=volume_24h,
+        sparkline_24h=sparkline,
         scalp_tf=scalp_tf,
         primary_tf=primary_tf,
         confirmation_tf=confirmation_tf,
