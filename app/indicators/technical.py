@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import pandas as pd
 import numpy as np
 from app.models.schemas import (
@@ -228,16 +229,17 @@ def analyze_klines(
     signal, strength = compute_signal(macd, bb, rsi)
 
     # ATR & VWAP — graceful failure
+    logger = logging.getLogger(__name__)
     atr = None
     vwap = None
     try:
         atr = compute_atr(df)
     except Exception:
-        pass
+        logger.warning("ATR computation failed for %s/%s", symbol, timeframe, exc_info=True)
     try:
         vwap = compute_vwap(df)
     except Exception:
-        pass
+        logger.warning("VWAP computation failed for %s/%s", symbol, timeframe, exc_info=True)
 
     return TechnicalSnapshot(
         symbol=symbol,

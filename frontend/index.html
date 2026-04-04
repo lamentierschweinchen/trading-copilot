@@ -1241,6 +1241,7 @@ function atrDisplay(atr) {
   return atr.pct.toFixed(2) + '%';
 }
 
+let _sparklineId = 0;
 function buildSparkline(prices, isPositive) {
   if (!prices || prices.length < 2) return '';
   const min = Math.min(...prices);
@@ -1255,17 +1256,18 @@ function buildSparkline(prices, isPositive) {
   const linePoints = points.join(' L');
   const lastPoint = points[points.length - 1].split(',');
   const color = isPositive ? '#00d4aa' : '#ff6b6b';
+  const gid = `sg${++_sparklineId}`;
 
   return `
   <div style="height:32px;margin:4px 0 8px 0">
     <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:100%">
       <defs>
-        <linearGradient id="sg${isPositive?'g':'r'}" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
           <stop offset="100%" stop-color="${color}" stop-opacity="0.02"/>
         </linearGradient>
       </defs>
-      <path d="M${linePoints} L${w},${h} L0,${h} Z" fill="url(#sg${isPositive?'g':'r'})"/>
+      <path d="M${linePoints} L${w},${h} L0,${h} Z" fill="url(#${gid})"/>
       <path d="M${linePoints}" fill="none" stroke="${color}" stroke-width="1.5"/>
       <circle cx="${lastPoint[0]}" cy="${lastPoint[1]}" r="2.5" fill="${color}"/>
     </svg>
@@ -1492,7 +1494,7 @@ function renderHeatmap(assets) {
   $grid.innerHTML = assets.map(a => {
     const chg = a.change_24h_pct || 0;
     const absChg = Math.abs(chg);
-    const opacity = Math.min(absChg * 12, 80) / 100;
+    const opacity = Math.min(Math.max(absChg * 10, absChg > 0.1 ? 8 : 0), 80) / 100;
     const color = chg >= 0.1 ? `rgba(0,212,170,${opacity})` :
                   chg <= -0.1 ? `rgba(255,107,107,${opacity})` : 'var(--bg-2)';
     const textColor = chg >= 0.1 ? 'var(--green)' : chg <= -0.1 ? 'var(--red)' : 'var(--text-3)';
