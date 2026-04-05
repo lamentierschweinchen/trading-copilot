@@ -19,6 +19,7 @@ class Settings(BaseSettings):
         "AVAX": {"binance": "AVAXUSDT"},
         "DOT": {"binance": "DOTUSDT"},
         "LINK": {"binance": "LINKUSDT"},
+        "EGLD": {"binance": "EGLDUSDT"},
     }
 
     # Timeframes for kline data
