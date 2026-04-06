@@ -62,7 +62,7 @@ body {
 /* ─── Layout Shell ─── */
 .shell {
   display: grid;
-  grid-template-rows: auto auto auto 1fr;
+  grid-template-rows: auto 1fr;
   min-height: 100vh;
 }
 
@@ -279,16 +279,16 @@ body {
 /* ─── Main Content ─── */
 .main {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: minmax(0, 1fr) 380px;
   gap: 0;
   overflow: hidden;
+  height: calc(100vh - 60px);
 }
 
 /* ─── Assets Panel ─── */
 .assets-panel {
   padding: 20px 24px;
   overflow-y: auto;
-  max-height: calc(100vh - 160px);
 }
 .panel-title {
   font-size: 11px;
@@ -576,7 +576,6 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  max-height: calc(100vh - 160px);
 }
 
 /* ─── Recommendations ─── */
@@ -1214,9 +1213,8 @@ body {
 
 /* ─── Responsive ─── */
 @media (max-width: 900px) {
-  .main { grid-template-columns: 1fr; }
-  .sidebar { border-left: none; border-top: 1px solid var(--border-subtle); max-height: none; }
-  .assets-panel { max-height: none; }
+  .main { grid-template-columns: 1fr; height: auto; }
+  .sidebar { border-left: none; border-top: 1px solid var(--border-subtle); }
   .assets-grid { grid-template-columns: 1fr; }
   .asset-indicators { grid-template-columns: repeat(3, 1fr); }
   .market-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1248,33 +1246,34 @@ body {
     </div>
   </header>
 
-  <!-- Macro Banner -->
-  <div class="macro-banner empty" id="macroBanner">
-    Run a session to load market data
-  </div>
-
-  <!-- Market Overview Strip -->
-  <div class="market-overview" id="marketOverview">
-    <div class="market-overview-title">Market Overview</div>
-    <div class="market-grid" id="marketGrid"></div>
-  </div>
-
-  <!-- Heatmap -->
-  <div class="heatmap-section" id="heatmapSection">
-    <div class="heatmap-title">24H Performance</div>
-    <div class="heatmap-grid" id="heatmapGrid"></div>
-  </div>
-
-  <!-- Session History Timeline -->
-  <div class="history-section" id="historySection" style="display:none">
-    <div class="history-title">Session History</div>
-    <div class="history-timeline" id="historyTimeline"></div>
-  </div>
-
   <!-- Main Content -->
   <div class="main">
     <!-- Assets Grid -->
     <div class="assets-panel" id="assetsPanel">
+
+      <!-- Macro Banner -->
+      <div class="macro-banner empty" id="macroBanner">
+        Run a session to load market data
+      </div>
+
+      <!-- Market Overview Strip -->
+      <div class="market-overview" id="marketOverview">
+        <div class="market-overview-title">Market Overview</div>
+        <div class="market-grid" id="marketGrid"></div>
+      </div>
+
+      <!-- Heatmap -->
+      <div class="heatmap-section" id="heatmapSection">
+        <div class="heatmap-title">24H Performance</div>
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+      </div>
+
+      <!-- Session History Timeline -->
+      <div class="history-section" id="historySection" style="display:none">
+        <div class="history-title">Session History</div>
+        <div class="history-timeline" id="historyTimeline"></div>
+      </div>
+
       <div class="empty-state" id="emptyState">
         <div class="empty-state-title">No data yet</div>
         <div class="empty-state-sub">
